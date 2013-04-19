@@ -11,10 +11,6 @@ public class TopicAssignment implements Serializable {
     private final int type;
     private final ArrayList<Integer> labels;
 
-    public TopicAssignment (int size) {
-        this (new ArrayList<Integer>(size), new int[size], null, -1, new ArrayList<Integer>());
-    }
-
     public TopicAssignment (ArrayList<Integer> tokens, String source, int type, ArrayList<Integer> labels) {
         this (tokens, new int[tokens.size()], source, type, labels);
     }

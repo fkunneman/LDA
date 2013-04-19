@@ -36,6 +36,7 @@ public class Corpus implements Iterable<TopicAssignment> {
     public Index getWordIndex () { return wordIndex; }
     public ArrayList<TopicAssignment> getDocuments () { return documents; }
     public Index getLabelIndex () { return labelIndex; }
+    public Index getTypeIndex () { return typeIndex; }
     public int size () { return documents.size(); }
     public int getNumTopics () { return labelIndex.size(); }
     public int getNumTypes () { return typeIndex.size(); }

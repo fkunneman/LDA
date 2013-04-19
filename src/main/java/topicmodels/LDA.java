@@ -4,6 +4,9 @@ package topicmodels;
 import util.Corpus;
 import util.TopicAssignment;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 
 public class LDA {
@@ -11,8 +14,6 @@ public class LDA {
 
     // initialize the vocabulary size and the number of topics
     private int numTopics;
-    private int numTypes;
-    private int numWords;
 
     // initialize the hyper-parameters
     protected double alphaSum;
@@ -30,11 +31,10 @@ public class LDA {
     }
 
     public void initSampler (Corpus corpus) {
+        this.corpus = corpus;
         numTopics = corpus.getNumTopics();
         alpha = alphaSum / numTopics;
-        numTypes = corpus.getNumTypes();
-        numWords = corpus.getNumWords();
-        sampler = new Sampler(numTopics, numWords, numTypes, alpha, beta, gamma);
+        sampler = new Sampler(numTopics, corpus.getNumWords(), corpus.getNumTypes(), alpha, beta, gamma);
         for (TopicAssignment document : corpus) {
             sampler.addDocument(document);
         }
@@ -65,6 +65,20 @@ public class LDA {
             sampler.increment(topic, word, type);
             documentTopicCounts[topic]++;
             document.setTopic(position, topic);
+        }
+    }
+
+    public void writeTopicDistributions (File file) throws IOException {
+        PrintWriter printer = new PrintWriter(file);
+        printer.print("type\tsource\ttopic:proportion...\n");
+        for (TopicAssignment document : corpus) {
+            printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
+            printer.print(document.getSource() + "\t");
+            int[] topicCounts = new int[numTopics];
+            for (int topic : document.getTopics()) {
+                topicCounts[topic]++;
+            }
+            // TODO compute proportion of topics per document!
         }
     }
 }
