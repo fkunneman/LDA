@@ -2,11 +2,13 @@ package topicmodels;
 
 
 import util.Corpus;
+import util.IDSorter;
 import util.TopicAssignment;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class LDA {
@@ -74,11 +76,22 @@ public class LDA {
         for (TopicAssignment document : corpus) {
             printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
             printer.print(document.getSource() + "\t");
+            IDSorter[] sortedTopics = new IDSorter[numTopics];
             int[] topicCounts = new int[numTopics];
             for (int topic : document.getTopics()) {
                 topicCounts[topic]++;
             }
-            // TODO compute proportion of topics per document!
+            for (int topic = 0; topic < numTopics; topic++) {
+                sortedTopics[topic] = new IDSorter(topic, (alpha + topicCounts[topic]) / (document.size() + alphaSum));
+            }
+            Arrays.sort(sortedTopics);
+            for (int index = 0; index < numTopics; index++) {
+                double score = sortedTopics[index].getValue();
+                if (score == 0.0) { break; }
+                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score);
+            }
+            printer.print("\n");
         }
+        printer.close();
     }
 }
