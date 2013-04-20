@@ -2,8 +2,8 @@ package topicmodels;
 
 
 import util.Corpus;
+import util.Document;
 import util.IDSorter;
-import util.TopicAssignment;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,20 +37,22 @@ public class LDA {
         numTopics = corpus.getNumTopics();
         alpha = alphaSum / numTopics;
         sampler = new Sampler(numTopics, corpus.getNumWords(), corpus.getNumTypes(), alpha, beta, gamma);
-        for (TopicAssignment document : corpus) {
+        for (Document document : corpus) {
             sampler.addDocument(document);
         }
+        logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
     }
 
     public void sample (int iterations) {
         for (int iteration = 1; iteration <= iterations; iteration++) {
-            for (TopicAssignment document: corpus) {
+            logger.info("Sampling iteration " + iteration + " started.");
+            for (Document document: corpus) {
                 sampleForOneDocument(document);
             }
         }
     }
 
-    public void sampleForOneDocument (TopicAssignment document) {
+    public void sampleForOneDocument (Document document) {
         int type = document.getType();
         int[] documentTopicCounts = new int[numTopics];
         // count for each assigned topic in this document how often it has been assigned.
@@ -63,7 +65,7 @@ public class LDA {
             int topic = document.getTopic(position);
             sampler.decrement(topic, word, type);
             documentTopicCounts[topic]--;
-            topic = sampler.sample(word, type, documentTopicCounts);
+            topic = sampler.sample(word, type, documentTopicCounts, document.getLabels());
             sampler.increment(topic, word, type);
             documentTopicCounts[topic]++;
             document.setTopic(position, topic);
@@ -73,7 +75,7 @@ public class LDA {
     public void writeTopicDistributions (File file) throws IOException {
         PrintWriter printer = new PrintWriter(file);
         printer.print("type\tsource\ttopic:proportion...\n");
-        for (TopicAssignment document : corpus) {
+        for (Document document : corpus) {
             printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
             printer.print(document.getSource() + "\t");
             IDSorter[] sortedTopics = new IDSorter[numTopics];

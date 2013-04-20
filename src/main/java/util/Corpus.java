@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 
-public class Corpus implements Iterable<TopicAssignment> {
+public class Corpus implements Iterable<Document> {
     private final Index wordIndex;
     private final Index labelIndex;
     private final Index typeIndex;
-    private final ArrayList<TopicAssignment> documents;
+    private final ArrayList<Document> documents;
 
     public Corpus () {
         this (new Index());
@@ -26,15 +26,15 @@ public class Corpus implements Iterable<TopicAssignment> {
         this.wordIndex = wordIndex;
         this.labelIndex = labelIndex;
         this.typeIndex = typeIndex;
-        this.documents = new ArrayList<TopicAssignment>();
+        this.documents = new ArrayList<Document>();
     }
 
-    public Iterator<TopicAssignment> iterator () {
+    public Iterator<Document> iterator () {
         return documents.iterator();
     }
 
     public Index getWordIndex () { return wordIndex; }
-    public ArrayList<TopicAssignment> getDocuments () { return documents; }
+    public ArrayList<Document> getDocuments () { return documents; }
     public Index getLabelIndex () { return labelIndex; }
     public Index getTypeIndex () { return typeIndex; }
     public int size () { return documents.size(); }
@@ -71,7 +71,7 @@ public class Corpus implements Iterable<TopicAssignment> {
             if (typeIndex.getId(type) == null) {
                 typeIndex.put(type);
             }
-            documents.add(new TopicAssignment(tokens, source, typeIndex.getId(type), indexedLabels));
+            documents.add(new Document(tokens, source, typeIndex.getId(type), indexedLabels));
         }
         in.close();
     }

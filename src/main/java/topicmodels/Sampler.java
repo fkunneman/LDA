@@ -1,7 +1,7 @@
 package topicmodels;
 
 
-import util.TopicAssignment;
+import util.Document;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -43,7 +43,7 @@ public class Sampler {
         random = new Random();
     }
 
-    public void addDocument (TopicAssignment document) {
+    public void addDocument (Document document) {
         int type = document.getType();
         for (int position = 0; position < document.size(); position++) {
             ArrayList<Integer> labels = document.getLabels();
@@ -67,11 +67,11 @@ public class Sampler {
         wordTopicCounts[word][topic]++;
     }
 
-    public int sample (int word, int type, int[] documentTopicCounts) {
+    public int sample (int word, int type, int[] documentTopicCounts, ArrayList<Integer> labels) {
         double[] topicTermScores = new double[numTopics];
         double score;
         double sum = 0.0;
-        for (int topic = 0; topic < numTopics; topic++) {
+        for (Integer topic : labels) {
             // P(z=t,T=t|z_-i, etc.)
             score = (alpha + documentTopicCounts[topic]) *
                     (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) *
