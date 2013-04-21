@@ -24,7 +24,7 @@ public class LDA {
     protected double gamma;
 
     protected Corpus corpus;
-    protected Sampler sampler;
+    protected LearnSampler sampler;
 
     public LDA (double alphaSum, double beta, double gamma) {
         this.alphaSum = alphaSum;
@@ -36,7 +36,7 @@ public class LDA {
         this.corpus = corpus;
         numTopics = corpus.getNumTopics();
         alpha = alphaSum / numTopics;
-        sampler = new Sampler(numTopics, corpus.getNumWords(), corpus.getNumTypes(), alpha, beta, gamma);
+        sampler = new LearnSampler(numTopics, corpus.getNumWords(), corpus.getNumTypes(), alpha, beta, gamma);
         for (Document document : corpus) {
             sampler.addDocument(document);
         }
