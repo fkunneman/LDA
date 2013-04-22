@@ -1,9 +1,12 @@
 package topicmodels;
 
+import util.Index;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-abstract public class Sampler {
+abstract public class Sampler implements Serializable {
 
     // initialize some arrays for storing counts
     protected int[] typeCounts;
@@ -24,6 +27,11 @@ abstract public class Sampler {
     public int numWords;
 
     public Random random;
+
+    // Indexes
+    public Index wordIndex;
+    public Index labelIndex;
+    public Index typeIndex;
 
     //public int[] sample (int word, int[] documentTopicCounts, ArrayList<Integer> labels, ArrayList<Integer> types) {
     public int[] sample (int word, ArrayList<Integer> labels, ArrayList<Integer> types) {
@@ -60,5 +68,35 @@ abstract public class Sampler {
             throw new IllegalStateException("No type sampled");
         }
         return new int[]{word, topic, 1};
+    }
+
+    public void write (File file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    public void writeObject (ObjectOutputStream outputStream) throws IOException {
+        outputStream.writeObject(typeCounts);
+        outputStream.writeObject(typeTopicCounts);
+        outputStream.writeObject(topicCounts);
+        outputStream.writeObject(wordTopicCounts);
+
+        outputStream.writeDouble(alpha);
+        outputStream.writeDouble(beta);
+        outputStream.writeDouble(betaSum);
+        outputStream.writeDouble(gamma);
+        outputStream.writeDouble(gammaSum);
+
+        outputStream.writeInt(numTopics);
+        outputStream.writeInt(numTypes);
+        outputStream.writeInt(numWords);
+
+        outputStream.writeObject(random);
+
+        outputStream.writeObject(labelIndex);
+        outputStream.writeObject(typeIndex);
+        outputStream.writeObject(wordIndex);
+
     }
 }

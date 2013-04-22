@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
 public class Corpus implements Iterable<Document> {
     private final Index wordIndex;
     private final Index labelIndex;
@@ -19,7 +18,11 @@ public class Corpus implements Iterable<Document> {
     }
 
     public Corpus (Index wordIndex) {
-        this (wordIndex, new Index(), new Index());
+        this (wordIndex, new Index());
+    }
+
+    public Corpus (Index wordIndex, Index labelIndex) {
+        this (wordIndex, labelIndex, new Index());
     }
 
     public Corpus (Index wordIndex, Index labelIndex, Index typeIndex) {
@@ -33,11 +36,12 @@ public class Corpus implements Iterable<Document> {
         return documents.iterator();
     }
 
-    //public Index getWordIndex () { return wordIndex; }
-    //public ArrayList<Document> getDocuments () { return documents; }
+    public Index getWordIndex () { return wordIndex; }
     public Index getLabelIndex () { return labelIndex; }
-    //public Index getTypeIndex () { return typeIndex; }
+    public Index getTypeIndex () { return typeIndex; }
+
     public int size () { return documents.size(); }
+
     public int getNumTopics () { return labelIndex.size(); }
     public int getNumTypes () { return typeIndex.size(); }
     public int getNumWords () { return wordIndex.size(); }

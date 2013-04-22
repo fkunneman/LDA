@@ -1,9 +1,8 @@
 package util;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Document implements Serializable {
+public class Document {
 
     private final ArrayList<Integer> tokens;
     private final int[] topicAssignments;

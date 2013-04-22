@@ -2,6 +2,11 @@ package topicmodels;
 
 import util.Document;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+
 
 public class InferenceSampler extends Sampler {
 
@@ -23,6 +28,11 @@ public class InferenceSampler extends Sampler {
 
         // random
         random = model.random;
+
+        // indexes
+        labelIndex = model.labelIndex;
+        typeIndex = model.typeIndex;
+        wordIndex = model.wordIndex;
     }
 
     public void addDocument (Document document) {
