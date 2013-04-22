@@ -15,7 +15,7 @@ public class InferenceSampler extends Sampler {
 
         // Initialize the counting arrays.
         typeCounts = new int[numTypes];
-        typeWordCounts = new int[numTypes][numTopics];
+        typeTopicCounts = new int[numTypes][numTopics];
         topicCounts = new int[numTopics];
         wordTopicCounts = new int[numWords][numTopics];
 

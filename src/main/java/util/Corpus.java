@@ -33,10 +33,10 @@ public class Corpus implements Iterable<Document> {
         return documents.iterator();
     }
 
-    public Index getWordIndex () { return wordIndex; }
-    public ArrayList<Document> getDocuments () { return documents; }
+    //public Index getWordIndex () { return wordIndex; }
+    //public ArrayList<Document> getDocuments () { return documents; }
     public Index getLabelIndex () { return labelIndex; }
-    public Index getTypeIndex () { return typeIndex; }
+    //public Index getTypeIndex () { return typeIndex; }
     public int size () { return documents.size(); }
     public int getNumTopics () { return labelIndex.size(); }
     public int getNumTypes () { return typeIndex.size(); }

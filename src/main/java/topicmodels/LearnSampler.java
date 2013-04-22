@@ -20,7 +20,7 @@ public class LearnSampler extends Sampler {
 
         // Initialize the counting arrays.
         typeCounts = new int[numTypes];
-        typeWordCounts = new int[numTypes][numTopics];
+        typeTopicCounts = new int[numTypes][numTopics];
         topicCounts = new int[numTopics];
         wordTopicCounts = new int[numWords][numTopics];
 
@@ -29,10 +29,11 @@ public class LearnSampler extends Sampler {
     }
 
     public void addDocument (Document document) {
-        int type = document.getType();
+        ArrayList<Integer> types = document.getTypes();
         for (int position = 0; position < document.size(); position++) {
             ArrayList<Integer> labels = document.getLabels();
             int topic = labels.get(random.nextInt(labels.size()));
+            int type = types.get(random.nextInt(types.size()));
             document.setTopic(position, topic);
             increment(topic, document.getToken(position), type);
         }
@@ -40,14 +41,14 @@ public class LearnSampler extends Sampler {
 
     public void decrement (int topic, int word, int type) {
         typeCounts[type]--;
-        typeWordCounts[type][topic]--;
+        typeTopicCounts[type][topic]--;
         topicCounts[topic]--;
         wordTopicCounts[word][topic]--;
     }
 
     public void increment (int topic, int word, int type) {
         typeCounts[type]++;
-        typeWordCounts[type][topic]++;
+        typeTopicCounts[type][topic]++;
         topicCounts[topic]++;
         wordTopicCounts[word][topic]++;
     }

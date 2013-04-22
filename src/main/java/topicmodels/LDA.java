@@ -66,7 +66,7 @@ public class LDA {
             int type = document.getType(position);
             sampler.decrement(topic, word, type);
             documentTopicCounts[topic]--;
-            assignment = sampler.sample(word, documentTopicCounts, document.getLabels(), document.getTypes());
+            assignment = sampler.sample(word, document.getLabels(), document.getTypes());
             topic = assignment[1]; type = assignment[2];
             sampler.increment(topic, word, type);
             documentTopicCounts[topic]++;

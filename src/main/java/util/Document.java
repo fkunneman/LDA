@@ -34,9 +34,9 @@ public class Document implements Serializable {
         typeAssignments[position] = type;
     }
 
-    public ArrayList<Integer> getTokens () { return tokens; }
+    //public ArrayList<Integer> getTokens () { return tokens; }
     public int[] getTopicAssignments () { return topicAssignments; }
-    public int[] getTypeAssignments () { return typeAssignments; }
+    //public int[] getTypeAssignments () { return typeAssignments; }
 
 
     public int size () { return tokens.size(); }
