@@ -2,11 +2,10 @@ package topicmodels;
 
 import util.Index;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-abstract public class Sampler implements Serializable {
+abstract public class Sampler {
 
     // initialize some arrays for storing counts
     protected int[] typeCounts;
@@ -33,7 +32,6 @@ abstract public class Sampler implements Serializable {
     public Index labelIndex;
     public Index typeIndex;
 
-    //public int[] sample (int word, int[] documentTopicCounts, ArrayList<Integer> labels, ArrayList<Integer> types) {
     public int[] sample (int word, ArrayList<Integer> labels, ArrayList<Integer> types) {
         double[][] topicTermScores = new double[labels.size()][types.size()];
         double sum = 0.0;
@@ -41,9 +39,6 @@ abstract public class Sampler implements Serializable {
             int type = types.get(i);
             for (int j = 0; j < labels.size(); j++) {
                 int topic = labels.get(j);
-                //double score = (alpha + documentTopicCounts[topic]) *
-                //        (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) *
-                //        (typeWordCounts[type][topic] + gamma) / (gammaSum + typeCounts[type]);
                 double score = (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) *
                                (gamma + typeTopicCounts[type][topic]) / (gammaSum + typeCounts[type]);
                 sum += score;
@@ -51,10 +46,9 @@ abstract public class Sampler implements Serializable {
             }
         }
         double sample = Math.random() * sum;
-        int topic = -1; int type = -1;
+        int topic = -1; int type = 0;
         while (sample > 0.0) {
             topic++;
-            type++;
             if (topic == labels.size()) {
                 type++;
                 topic = 0;
@@ -67,36 +61,6 @@ abstract public class Sampler implements Serializable {
         if (type == -1) {
             throw new IllegalStateException("No type sampled");
         }
-        return new int[]{word, topic, 1};
-    }
-
-    public void write (File file) throws IOException {
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
-        outputStream.writeObject(this);
-        outputStream.close();
-    }
-
-    public void writeObject (ObjectOutputStream outputStream) throws IOException {
-        outputStream.writeObject(typeCounts);
-        outputStream.writeObject(typeTopicCounts);
-        outputStream.writeObject(topicCounts);
-        outputStream.writeObject(wordTopicCounts);
-
-        outputStream.writeDouble(alpha);
-        outputStream.writeDouble(beta);
-        outputStream.writeDouble(betaSum);
-        outputStream.writeDouble(gamma);
-        outputStream.writeDouble(gammaSum);
-
-        outputStream.writeInt(numTopics);
-        outputStream.writeInt(numTypes);
-        outputStream.writeInt(numWords);
-
-        outputStream.writeObject(random);
-
-        outputStream.writeObject(labelIndex);
-        outputStream.writeObject(typeIndex);
-        outputStream.writeObject(wordIndex);
-
+        return new int[]{word, labels.get(topic), types.get(type)};
     }
 }

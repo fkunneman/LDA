@@ -45,11 +45,13 @@ public class Main {
         parser.addArgument("--beta")
                 .dest("beta")
                 .type(Double.class)
+                .setDefault(0.01)
                 .help("Beta parameter: smoothing over unigram distribution.");
 
         parser.addArgument("--gamma")
                 .dest("gamma")
                 .type(Double.class)
+                .setDefault(0.01)
                 .help("Gamma parameter: smoothin over the topic distribution.");
 
         parser.addArgument("--logging")

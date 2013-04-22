@@ -15,6 +15,8 @@ abstract public class TopicModel {
     public Logger logger = Logger.getLogger(Learner.class.getName());
     // initialize the vocabulary size and the number of topics
     protected int numTopics;
+    protected int numWords;
+    protected int numTypes;
 
     // initialize the hyper-parameters
     protected double alphaSum;
@@ -43,17 +45,24 @@ abstract public class TopicModel {
             printer.print(document.getSource() + "\t");
             IDSorter[] sortedTopics = new IDSorter[numTopics];
             int[] topicCounts = new int[numTopics];
-            for (int topic : document.getTopicAssignments()) {
-                topicCounts[topic]++;
+            int docLen = 0;
+            for (int position = 0; position < document.size(); position++) {
+                int word = document.getToken(position);
+                if (word >= numWords) { continue; }
+                docLen++;
+                topicCounts[document.getTopic(position)]++;
             }
+//            for (int topic : document.getTopicAssignments()) {
+//                topicCounts[topic]++;
+//            }
             for (int topic = 0; topic < numTopics; topic++) {
-                sortedTopics[topic] = new IDSorter(topic, (alpha + topicCounts[topic]) / (document.size() + alphaSum));
+                sortedTopics[topic] = new IDSorter(topic, ((double) topicCounts[topic]) / (docLen));
             }
             Arrays.sort(sortedTopics);
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
                 if (score == 0.0) { break; }
-                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score);
+                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + ":" + score + " ");
             }
             printer.print("\n");
         }
