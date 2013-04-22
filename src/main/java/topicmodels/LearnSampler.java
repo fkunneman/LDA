@@ -35,6 +35,7 @@ public class LearnSampler extends Sampler {
             int topic = labels.get(random.nextInt(labels.size()));
             int type = types.get(random.nextInt(types.size()));
             document.setTopic(position, topic);
+            document.setType(position, type);
             increment(topic, document.getToken(position), type);
         }
     }

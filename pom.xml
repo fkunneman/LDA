@@ -8,5 +8,13 @@
     <artifactId>LDA</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <dependencies>
+        <dependency>
+            <groupId>net.sourceforge.argparse4j</groupId>
+            <artifactId>argparse4j</artifactId>
+            <version>0.2.2</version>
+        </dependency>
+    </dependencies>
+
     
 </project>

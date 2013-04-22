@@ -1,5 +1,7 @@
 package topicmodels;
 
+import util.Document;
+
 
 public class InferenceSampler extends Sampler {
 
@@ -21,6 +23,15 @@ public class InferenceSampler extends Sampler {
 
         // random
         random = model.random;
+    }
+
+    public void addDocument (Document document) {
+        for (int position = 0; position < document.size(); position++) {
+            int topic = random.nextInt(numTopics);
+            int type = random.nextInt(numTypes);
+            document.setTopic(position, topic);
+            document.setType(position, type);
+        }
     }
 
     public void increment (int topic, int word, int type) {}
