@@ -53,22 +53,25 @@ public class LDA {
     }
 
     public void sampleForOneDocument (Document document) {
-        int type = document.getType();
         int[] documentTopicCounts = new int[numTopics];
+        int[] assignment;
         // count for each assigned topic in this document how often it has been assigned.
         // (This could be stored in a separate array, but is more memory efficient)
-        for (int topic : document.getTopics()) {
+        for (int topic : document.getTopicAssignments()) {
             documentTopicCounts[topic]++;
         }
         for (int position = 0; position < document.size(); position++) {
             int word = document.getToken(position);
             int topic = document.getTopic(position);
+            int type = document.getType(position);
             sampler.decrement(topic, word, type);
             documentTopicCounts[topic]--;
-            topic = sampler.sample(word, type, documentTopicCounts, document.getLabels());
+            assignment = sampler.sample(word, documentTopicCounts, document.getLabels(), document.getTypes());
+            topic = assignment[1]; type = assignment[2];
             sampler.increment(topic, word, type);
             documentTopicCounts[topic]++;
             document.setTopic(position, topic);
+            document.setType(position, type);
         }
     }
 
@@ -76,11 +79,11 @@ public class LDA {
         PrintWriter printer = new PrintWriter(file);
         printer.print("type\tsource\ttopic:proportion...\n");
         for (Document document : corpus) {
-            printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
+            //printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
             printer.print(document.getSource() + "\t");
             IDSorter[] sortedTopics = new IDSorter[numTopics];
             int[] topicCounts = new int[numTopics];
-            for (int topic : document.getTopics()) {
+            for (int topic : document.getTopicAssignments()) {
                 topicCounts[topic]++;
             }
             for (int topic = 0; topic < numTopics; topic++) {

@@ -6,37 +6,43 @@ import java.util.ArrayList;
 public class Document implements Serializable {
 
     private final ArrayList<Integer> tokens;
-    private final int[] topics;
+    private final int[] topicAssignments;
+    private final int[] typeAssignments;
     private final String source;
-    private final int type;
-    private final ArrayList<Integer> labels;
+    private final ArrayList<Integer> types;
+    private final ArrayList<Integer> topics;
 
-    public Document(ArrayList<Integer> tokens, String source, int type, ArrayList<Integer> labels) {
-        this (tokens, new int[tokens.size()], source, type, labels);
-    }
-
-    public Document(ArrayList<Integer> tokens, int[] topics, String source, int type, ArrayList<Integer> labels) {
+    public Document(ArrayList<Integer> tokens, String source, ArrayList<Integer> types, ArrayList<Integer> topics) {
         this.tokens = tokens;
-        this.topics = topics;
+        this.topicAssignments = new int[tokens.size()];
+        this.typeAssignments = new int[tokens.size()];
+
         this.source = source;
-        this.type = type;
-        this.labels = labels;
+        this.types = types;
+        this.topics = topics;
     }
 
-    public int getTopic(int position) { return topics[position]; }
+    public int getTopic(int position) { return topicAssignments[position]; }
     public int getToken(int position) { return tokens.get(position); }
+    public int getType(int position) { return typeAssignments[position]; }
 
     public void setTopic(int position, int topic) {
-        topics[position] = topic;
+        topicAssignments[position] = topic;
+    }
+
+    public void setType(int position, int type) {
+        typeAssignments[position] = type;
     }
 
     public ArrayList<Integer> getTokens () { return tokens; }
-    public int[] getTopics () { return topics; }
-    public ArrayList<Integer> getLabels () { return labels; }
+    public int[] getTopicAssignments () { return topicAssignments; }
+    public int[] getTypeAssignments () { return typeAssignments; }
+
 
     public int size () { return tokens.size(); }
 
-    public int getType () { return type; }
+    public ArrayList<Integer> getTypes () { return types; }
     public String getSource () { return source; }
+    public ArrayList<Integer> getLabels () { return topics; }
 }
 

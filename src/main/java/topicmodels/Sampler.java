@@ -1,5 +1,7 @@
 package topicmodels;
 
+import util.Assignment;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -25,19 +27,18 @@ abstract public class Sampler {
 
     public Random random;
 
-    public void increment (int topic, int word, int type) {}
-    public void decrement (int topic, int word, int type) {}
-
-    public int sample (int word, int type, int[] documentTopicCounts, ArrayList<Integer> labels) {
+    public int[] sample (int word, int[] documentTopicCounts, ArrayList<Integer> labels, ArrayList<Integer> types) {
         double[] topicTermScores = new double[numTopics];
         double sum = 0.0;
-        for (Integer topic : labels) {
-            // P(z=t,T=t|z_-i, etc.)
-            double score = (alpha + documentTopicCounts[topic]) *
-                    (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) *
-                    (typeWordCounts[type][topic] + gamma) / (gammaSum + typeCounts[type]);
-            sum += score;
-            topicTermScores[topic] = score;
+        for (Integer type : types) {
+            for (Integer topic : labels) {
+                // P(z=t,T=t|z_-i, etc.)
+                double score = (alpha + documentTopicCounts[topic]) *
+                        (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) *
+                        (typeWordCounts[type][topic] + gamma) / (gammaSum + typeCounts[type]);
+                sum += score;
+                topicTermScores[topic] = score;
+            }
         }
         double sample = Math.random() * sum;
         int topic = -1;
@@ -48,6 +49,6 @@ abstract public class Sampler {
         if (topic == -1) {
             throw new IllegalStateException("No index sampled.");
         }
-        return topic;
+        return new int[]{word, topic, 1};
     }
 }

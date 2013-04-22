@@ -50,7 +50,7 @@ public class Corpus implements Iterable<Document> {
             }
             String[] fields = line.split("\t");
             String source = fields[0];
-            String type = fields[1];
+            String[] types = fields[1].split(",");
             String[] labels = fields[2].split(",");
             ArrayList<Integer> indexedLabels = new ArrayList<Integer>();
             for (String label : labels) {
@@ -68,10 +68,14 @@ public class Corpus implements Iterable<Document> {
                 }
                 tokens.add(wordIndex.getId(word));
             }
-            if (typeIndex.getId(type) == null) {
-                typeIndex.put(type);
+            ArrayList<Integer> indexedTypes = new ArrayList<Integer>();
+            for (String type : types) {
+                if (typeIndex.getId(type) == null) {
+                    typeIndex.put(type);
+                }
+                indexedTypes.add(typeIndex.getId(type));
             }
-            documents.add(new Document(tokens, source, typeIndex.getId(type), indexedLabels));
+            documents.add(new Document(tokens, source, indexedTypes, indexedLabels));
         }
         in.close();
     }

@@ -22,4 +22,7 @@ public class InferenceSampler extends Sampler {
         // random
         random = model.random;
     }
+
+    public void increment (int topic, int word, int type) {}
+    public void decrement (int topic, int word, int type) {}
 }
