@@ -34,7 +34,7 @@ public class Document {
     }
 
     //public ArrayList<Integer> getTokens () { return tokens; }
-    public int[] getTopicAssignments () { return topicAssignments; }
+    //public int[] getTopicAssignments () { return topicAssignments; }
     public int[] getTypeAssignments () { return typeAssignments; }
 
 

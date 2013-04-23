@@ -6,7 +6,6 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import topicmodels.Inferencer;
 import topicmodels.Learner;
 import topicmodels.LearnSampler;
-import topicmodels.Learner;
 import util.Corpus;
 
 import java.io.File;
@@ -61,11 +60,6 @@ public class Main {
                 .setDefault(1)
                 .help("The level of detail in logging events (low = 1, fine 3)");
 
-        parser.addArgument("--intermediate-results")
-                .dest("save")
-                .action(Arguments.storeTrue())
-                .help("Save the model at every 100 iterations.");
-
         Namespace ns = parser.parseArgs(args);
         Double beta = ns.getDouble("beta");
         Double gamma = ns.getDouble("gamma");
@@ -73,7 +67,6 @@ public class Main {
         Integer logging = ns.getInt("logging");
         String file = ns.getString("file");
         String model = ns.getString("model");
-        Boolean save = ns.getBoolean("save");
         String output = ns.getString("output");
         File outputDirectory;
         if (output == null && model != null) {

@@ -38,6 +38,10 @@ public class Inferencer extends TopicModel {
 
     public void sampleForOneDocument (Document document) {
         int[] assignment;
+        int[] docTypeCounts = new int[numTypes];
+        for (Integer type: document.getTypeAssignments()) {
+            docTypeCounts[type]++;
+        }
         for (int position = 0; position < document.size(); position++) {
             int word = document.getToken(position);
             if (word >= numWords) {
@@ -45,12 +49,12 @@ public class Inferencer extends TopicModel {
             }
             int topic = document.getTopic(position);
             int type = document.getType(position);
-            System.out.println("TOPIC: " + topic + " TYPE: " + type);
-            System.out.println("topicCounts: " + sampler.topicCounts[topic] + " typeTopicCounts: " + sampler.typeTopicCounts[type][topic]);
             sampler.decrement(topic, word, type);
-            assignment = sampler.sample(word, documentTopics, documentTypes);
+            docTypeCounts[type]--;
+            assignment = sampler.sample(word, documentTopics, documentTypes, docTypeCounts);
             topic = assignment[1]; type = assignment[2];
             sampler.increment(topic, word, type);
+            docTypeCounts[type]++;
             document.setTopic(position, topic);
             document.setType(position, type);
         }

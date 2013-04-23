@@ -3,7 +3,6 @@ package topicmodels;
 
 import util.Corpus;
 import util.Document;
-import util.Index;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -68,58 +67,5 @@ public class LearnSampler extends Sampler implements Serializable {
         sampler = (LearnSampler) inputStream.readObject();
         inputStream.close();
         return sampler;
-    }
-
-    private void readObject (ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
-        typeCounts = (int[]) inputStream.readObject();
-        typeTopicCounts = (int[][]) inputStream.readObject();
-        topicCounts = (int[]) inputStream.readObject();
-        wordTopicCounts = (int[][]) inputStream.readObject();
-
-        alpha = inputStream.readDouble();
-        beta = inputStream.readDouble();
-        betaSum = inputStream.readDouble();
-        gamma = inputStream.readDouble();
-        gammaSum = inputStream.readDouble();
-
-        numTopics = inputStream.readInt();
-        numTypes = inputStream.readInt();
-        numWords = inputStream.readInt();
-
-        random = (Random) inputStream.readObject();
-
-        labelIndex = (Index) inputStream.readObject();
-        typeIndex = (Index) inputStream.readObject();
-        wordIndex = (Index) inputStream.readObject();
-    }
-
-    public void write (File file) throws IOException {
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
-        outputStream.writeObject(this);
-        outputStream.close();
-    }
-
-    private void writeObject (ObjectOutputStream outputStream) throws IOException {
-        outputStream.writeObject(typeCounts);
-        outputStream.writeObject(typeTopicCounts);
-        outputStream.writeObject(topicCounts);
-        outputStream.writeObject(wordTopicCounts);
-
-        outputStream.writeDouble(alpha);
-        outputStream.writeDouble(beta);
-        outputStream.writeDouble(betaSum);
-        outputStream.writeDouble(gamma);
-        outputStream.writeDouble(gammaSum);
-
-        outputStream.writeInt(numTopics);
-        outputStream.writeInt(numTypes);
-        outputStream.writeInt(numWords);
-
-        outputStream.writeObject(random);
-
-        outputStream.writeObject(labelIndex);
-        outputStream.writeObject(typeIndex);
-        outputStream.writeObject(wordIndex);
-
     }
 }

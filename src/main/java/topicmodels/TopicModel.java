@@ -52,9 +52,6 @@ abstract public class TopicModel {
                 docLen++;
                 topicCounts[document.getTopic(position)]++;
             }
-//            for (int topic : document.getTopicAssignments()) {
-//                topicCounts[topic]++;
-//            }
             for (int topic = 0; topic < numTopics; topic++) {
                 sortedTopics[topic] = new IDSorter(topic, ((double) topicCounts[topic]) / (docLen));
             }
@@ -62,7 +59,7 @@ abstract public class TopicModel {
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
                 if (score == 0.0) { break; }
-                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + ":" + score + " ");
+                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
             }
             printer.print("\n");
         }
