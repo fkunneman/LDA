@@ -60,9 +60,6 @@ abstract public class Sampler implements Serializable {
         if (topic == -1) {
             throw new IllegalStateException("No topic sampled.");
         }
-        if (type == -1) {
-            throw new IllegalStateException("No type sampled");
-        }
         return new int[]{word, labels.get(topic), types.get(type)};
     }
 
