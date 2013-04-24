@@ -3,9 +3,7 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import topicmodels.Inferencer;
-import topicmodels.Learner;
-import topicmodels.LearnSampler;
+import topicmodels.DDLLDA;
 import util.Corpus;
 
 import java.io.File;
@@ -19,7 +17,7 @@ public class Main {
     public static void main(String[] args) throws ArgumentParserException, IOException, ClassNotFoundException {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("CD-LLDA")
                 .defaultHelp(true)
-                .description("Document class dependent Labeled-Learner.");
+                .description("Document class dependent Labeled-DDLLDA.");
 
         parser.addArgument("-f", "--file")
                 .dest("file")
@@ -96,21 +94,20 @@ public class Main {
         if (model == null) {
             Corpus corpus = new Corpus();
             corpus.readFile(file);
-            Learner lda = new Learner(50.0, beta, gamma);
-            lda.logger.setLevel(logLevel);
-            lda.logger.addHandler(logHandler);
-            lda.initSampler(corpus);
-            lda.sample(iterations);
-            lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), 0.0);
-            lda.sampler.write(new File(outputDirectory + File.separator + "model.lda"));
+            DDLLDA ddllda = new DDLLDA(50.0, beta, gamma, corpus);
+            ddllda.logger.setLevel(logLevel);
+            ddllda.logger.addHandler(logHandler);
+            ddllda.train(iterations, corpus);
+            ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+            ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
         } else {
-            LearnSampler sampler = LearnSampler.read(new File(model));
-            Corpus corpus = new Corpus(sampler.wordIndex, sampler.labelIndex, sampler.typeIndex);
+            DDLLDA ddllda = DDLLDA.read(new File(model));
+            ddllda.logger.setLevel(logLevel);
+            ddllda.logger.addHandler(logHandler);
+            Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
             corpus.readFile(file);
-            Inferencer inferencer = new Inferencer();
-            inferencer.initSampler(corpus, sampler);
-            inferencer.sample(iterations);
-            inferencer.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), gamma);
+            ddllda.infer(iterations, corpus);
+            ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
         }
     }
 }
