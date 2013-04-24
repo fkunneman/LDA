@@ -102,8 +102,6 @@ public class Main {
             ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
         } else {
             DDLLDA ddllda = DDLLDA.read(new File(model));
-            ddllda.logger.setLevel(logLevel);
-            ddllda.logger.addHandler(logHandler);
             Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
             corpus.readFile(file);
             ddllda.infer(iterations, corpus);

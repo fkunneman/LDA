@@ -67,6 +67,7 @@ public class DDLLDA implements Serializable {
     }
 
     public void train (int iterations, Corpus corpus) {
+        logger = Logger.getLogger(DDLLDA.class.getName());
         learnSampler = new DDLLDA.LearnSampler();
         for (Document document : corpus) {
             learnSampler.addDocument(document);
@@ -85,6 +86,7 @@ public class DDLLDA implements Serializable {
         if (!trained) {
             throw new IllegalStateException("The model is not trained yet!");
         }
+        logger = Logger.getLogger(DDLLDA.class.getName());
 
         inferSampler = new InferSampler();
         for (Document document : corpus) {
@@ -157,6 +159,8 @@ public class DDLLDA implements Serializable {
         topicIndex = (Index) inputStream.readObject();
         typeIndex = (Index) inputStream.readObject();
         wordIndex = (Index) inputStream.readObject();
+
+        trained = inputStream.readBoolean();
     }
 
     public void write (File file) throws IOException {
@@ -186,6 +190,8 @@ public class DDLLDA implements Serializable {
         outputStream.writeObject(topicIndex);
         outputStream.writeObject(typeIndex);
         outputStream.writeObject(wordIndex);
+
+        outputStream.writeBoolean(trained);
     }
 
     /* Base sampler, sub-classed by LearnSampler and InferSampler.*/
@@ -227,11 +233,13 @@ public class DDLLDA implements Serializable {
             double sum = 0.0;
             for (int i = 0; i < types.size(); i++) {
                 int type = types.get(i);
+                double P_T = (gammaSum + typeCounts[type]);
+                double P_Dt = (gamma + docTypeCounts[type]);
                 for (int j = 0; j < labels.size(); j++) {
                     int topic = labels.get(j);
-                    double score = (gamma + docTypeCounts[type]) * // P(T|D)
+                    double score = P_Dt * // P(T|D)
                             (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) * // P(w|t)
-                            (gamma + typeTopicCounts[type][topic]) / (gammaSum + typeCounts[type]);  // P(t|T)
+                            (gamma + typeTopicCounts[type][topic]) / P_T;  // P(t|T)
                     sum += score;
                     topicTermScores[j][i] = score;
                 }
