@@ -1,12 +1,12 @@
 package topicmodels;
 
 import util.Index;
+import util.Randoms;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Random;
 
-abstract public class Sampler implements Serializable {
+public class Sampler implements Serializable {
 
     // initialize some arrays for storing counts
     protected int[] typeCounts;
@@ -26,12 +26,25 @@ abstract public class Sampler implements Serializable {
     public int numTypes;
     public int numWords;
 
-    public Random random;
+    public Randoms random;
 
     // Indexes
     public Index wordIndex;
     public Index labelIndex;
     public Index typeIndex;
+
+    public Sampler (int numTopics, int numTypes, int numWords, double alpha, double beta, double gamma) {
+        this.numTopics = numTopics;
+        this.numTypes = numTypes;
+        this.numWords = numWords;
+        this.alpha = alpha;
+        this.beta = beta;
+        this.gamma = gamma;
+        this.betaSum = beta * numWords;
+        this.gammaSum = gamma * numTopics;
+
+        random = new Randoms(20);
+    }
 
     public int[] sample (int word, ArrayList<Integer> labels, ArrayList<Integer> types, int[] docTypeCounts) {
         double[][] topicTermScores = new double[labels.size()][types.size()];
@@ -47,7 +60,7 @@ abstract public class Sampler implements Serializable {
                 topicTermScores[j][i] = score;
             }
         }
-        double sample = Math.random() * sum;
+        double sample = random.nextUniform() * sum;
         int topic = -1; int type = 0;
         while (sample > 0.0) {
             topic++;
@@ -79,7 +92,7 @@ abstract public class Sampler implements Serializable {
         numTypes = inputStream.readInt();
         numWords = inputStream.readInt();
 
-        random = (Random) inputStream.readObject();
+        random = (Randoms) inputStream.readObject();
 
         labelIndex = (Index) inputStream.readObject();
         typeIndex = (Index) inputStream.readObject();

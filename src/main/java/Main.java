@@ -101,7 +101,7 @@ public class Main {
             lda.logger.addHandler(logHandler);
             lda.initSampler(corpus);
             lda.sample(iterations);
-            lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"));
+            lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), 0.0);
             lda.sampler.write(new File(outputDirectory + File.separator + "model.lda"));
         } else {
             LearnSampler sampler = LearnSampler.read(new File(model));
@@ -110,7 +110,7 @@ public class Main {
             Inferencer inferencer = new Inferencer();
             inferencer.initSampler(corpus, sampler);
             inferencer.sample(iterations);
-            inferencer.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"));
+            inferencer.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), gamma);
         }
     }
 }

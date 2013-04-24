@@ -3,31 +3,21 @@ package topicmodels;
 
 import util.Corpus;
 import util.Document;
+import util.Randoms;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class LearnSampler extends Sampler implements Serializable {
 
     public LearnSampler (Corpus corpus, double alpha, double beta, double gamma) {
-        this.alpha = alpha;
-        this.beta = beta;
-        this.betaSum = beta * numWords;
-        this.gammaSum = gamma * numTopics;
-        this.gamma = gamma;
-        this.numTopics = corpus.getNumTopics();
-        this.numTypes = corpus.getNumTypes();
-        this.numWords = corpus.getNumWords();
+        super(corpus.getNumTopics(), corpus.getNumTypes(), corpus.getNumWords(), alpha, beta, gamma);
 
         // Initialize the counting arrays.
         typeCounts = new int[numTypes];
         typeTopicCounts = new int[numTypes][numTopics];
         topicCounts = new int[numTopics];
         wordTopicCounts = new int[numWords][numTopics];
-
-        // random
-        random = new Random();
 
         // indexes
         labelIndex = corpus.getLabelIndex();
@@ -39,8 +29,8 @@ public class LearnSampler extends Sampler implements Serializable {
         ArrayList<Integer> types = document.getTypes();
         for (int position = 0; position < document.size(); position++) {
             ArrayList<Integer> labels = document.getLabels();
-            int topic = labels.get(random.nextInt(labels.size()));
-            int type = types.get(random.nextInt(types.size()));
+            int topic = random.choice(labels);
+            int type = random.choice(types);
             document.setTopic(position, topic);
             document.setType(position, type);
             increment(topic, document.getToken(position), type);

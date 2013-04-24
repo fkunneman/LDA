@@ -37,7 +37,7 @@ abstract public class TopicModel {
 
     public void sampleForOneDocument (Document document) {}
 
-    public void writeTopicDistributions (File file) throws IOException {
+    public void writeTopicDistributions (File file, double smooth) throws IOException {
         PrintWriter printer = new PrintWriter(file);
         printer.print("type\tsource\ttopic:proportion...\n");
         for (Document document : corpus) {
@@ -53,7 +53,7 @@ abstract public class TopicModel {
                 topicCounts[document.getTopic(position)]++;
             }
             for (int topic = 0; topic < numTopics; topic++) {
-                sortedTopics[topic] = new IDSorter(topic, ((double) topicCounts[topic]) / (docLen));
+                sortedTopics[topic] = new IDSorter(topic, (smooth + topicCounts[topic]) / (docLen));
             }
             Arrays.sort(sortedTopics);
             for (int index = 0; index < numTopics; index++) {

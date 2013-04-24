@@ -6,23 +6,13 @@ import util.Document;
 public class InferenceSampler extends Sampler {
 
     public InferenceSampler (LearnSampler model) {
-        this.alpha = model.alpha;
-        this.beta = model.beta;
-        this.betaSum = beta * model.numWords;
-        this.gammaSum = gamma * numTopics;
-        this.gamma = model.gamma;
-        this.numTopics = model.numTopics;
-        this.numTypes = model.numTypes;
-        this.numWords = model.numWords;
+        super(model.numTopics, model.numTypes, model.numWords, model.alpha, model.beta, model.gamma);
 
         // Initialize the counting arrays.
         typeCounts = model.typeCounts;
         typeTopicCounts = model.typeTopicCounts;
         topicCounts = model.topicCounts;
         wordTopicCounts = model.wordTopicCounts;
-
-        // random
-        random = model.random;
 
         // indexes
         labelIndex = model.labelIndex;
