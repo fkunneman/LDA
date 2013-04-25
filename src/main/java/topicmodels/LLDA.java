@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 /**
  * Labeled Latent Dirichlet Allocation.
  *
- * The class implements a simple and naive version of L-LDA using
+ * This class implements a simple and naive version of L-LDA using
  * Gibbs sampling. This code is probably much slower than you would want
  * it to be, but it serves its goal for educational purposes and
  * easy extension possibilities.
@@ -207,7 +207,7 @@ public class LLDA implements Serializable {
          * Sample a topic for the current word. This method is computationally
          * quite heavy and should and could probably be optimized further.
          *
-         * @param word the word for which we sample a topic and a type;
+         * @param word the word for which we sample a topic;
          * @param labels the set of labels to sample a topic from;
          * @param docTopicCounts for each topic, how often does it occur in the document under investigation?
          * @return the sampled topic
@@ -232,6 +232,9 @@ public class LLDA implements Serializable {
         }
     }
 
+    /**
+     * Sampler for training a model
+     */
     public class LearnSampler extends LLDA.Sampler {
 
         /**
