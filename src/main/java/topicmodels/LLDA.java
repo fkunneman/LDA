@@ -32,7 +32,7 @@ public class LLDA implements Serializable {
     protected Index wordIndex;
 
     protected Randoms random;
-    protected Boolean learned;
+    protected Boolean trained = false;
 
     public LLDA (double alpha, double beta, Corpus corpus) {
         numTopics = corpus.getNumTopics();
@@ -51,10 +51,32 @@ public class LLDA implements Serializable {
     }
 
     public void train (int iterations, Corpus corpus) {
-
+        learnSampler = new LLDA.LearnSampler();
+        for (Document document : corpus) {
+            learnSampler.addDocument(document);
+        }
+        logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
+        for (int iteration = 1; iteration <= iterations; iteration++) {
+            logger.info("Sampling iteration " + iteration + " started.");
+            for (Document document : corpus) {
+                learnSampler.sampleForOneDocument(document);
+            }
+        }
+        trained = true;
     }
 
     public void infer (int iterations, Corpus corpus) {
+        inferSampler = new LLDA.InferSampler();
+        for (Document document : corpus) {
+            inferSampler.addDocument(document);
+        }
+        logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
+        for (int iteration = 1; iteration <= iterations; iteration++) {
+            logger.info("Sampling iteration " + iteration + " started.");
+            for (Document document : corpus) {
+                inferSampler.sampleForOneDocument(document);
+            }
+        }
 
     }
 
