@@ -256,7 +256,6 @@ public class DDLLDA implements Serializable {
             }
             return new int[]{word, labels.get(topic), types.get(type)};
         }
-
     }
 
     // Sampler for training a model.

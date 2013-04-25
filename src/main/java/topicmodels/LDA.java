@@ -176,9 +176,7 @@ public class LDA implements Serializable {
         }
     }
 
-    public class InferSampler extends LDA.Sampler {
-
-    }
+    public class InferSampler extends LDA.Sampler {}
 
     public static LDA read (File file) throws IOException, ClassNotFoundException {
         LDA lda;

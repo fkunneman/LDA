@@ -96,7 +96,7 @@ public class Main {
                 llda.train(iterations, corpus);
                 llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 llda.write(new File(outputDirectory + File.separator + "model.lda"));
-            } else if (system.equals("DDLLA")) {
+            } else if (system.equals("DDLLDA")) {
                 DDLLDA ddllda = new DDLLDA(50.0, beta, gamma, corpus);
                 ddllda.train(iterations, corpus);
                 ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);

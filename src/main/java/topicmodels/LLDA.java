@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+
 public class LLDA implements Serializable {
     public static Logger logger = Logger.getLogger(LLDA.class.getName());
 
