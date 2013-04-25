@@ -103,7 +103,6 @@ public class DDLLDA implements Serializable {
         PrintWriter printer = new PrintWriter(file);
         printer.print("type\tsource\ttopic:proportion...\n");
         for (Document document : corpus) {
-            //printer.print(corpus.getTypeIndex().getItem(document.getType()) + "\t");
             printer.print(document.getSource() + "\t");
             IDSorter[] sortedTopics = new IDSorter[numTopics];
             int[] topicCounts = new int[numTopics];

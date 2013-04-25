@@ -26,8 +26,8 @@ public class LLDA implements Serializable {
     protected int[][] wordTopicCounts;
 
     // Indexes
-    protected Index topicIndex;
-    protected Index wordIndex;
+    public Index topicIndex;
+    public Index wordIndex;
 
     protected Randoms random;
     protected Boolean trained = false;
@@ -103,58 +103,6 @@ public class LLDA implements Serializable {
             printer.print("\n");
         }
         printer.close();
-    }
-
-    public static LLDA read (File file) throws IOException, ClassNotFoundException {
-        LLDA llda;
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
-        llda = (LLDA) inputStream.readObject();
-        inputStream.close();
-        return llda;
-    }
-
-    private void readObject (ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
-        topicCounts = (int[]) inputStream.readObject();
-        wordTopicCounts = (int[][]) inputStream.readObject();
-
-        alpha = inputStream.readDouble();
-        beta = inputStream.readDouble();
-        betaSum = inputStream.readDouble();
-
-        numTopics = inputStream.readInt();
-        numWords = inputStream.readInt();
-
-        random = (Randoms) inputStream.readObject();
-
-        topicIndex = (Index) inputStream.readObject();
-        wordIndex = (Index) inputStream.readObject();
-
-        trained = inputStream.readBoolean();
-    }
-
-    public void write (File file) throws IOException {
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
-        outputStream.writeObject(this);
-        outputStream.close();
-    }
-
-    private void writeObject (ObjectOutputStream outputStream) throws IOException {
-        outputStream.writeObject(topicCounts);
-        outputStream.writeObject(wordTopicCounts);
-
-        outputStream.writeDouble(alpha);
-        outputStream.writeDouble(beta);
-        outputStream.writeDouble(betaSum);
-
-        outputStream.writeInt(numTopics);
-        outputStream.writeInt(numWords);
-
-        outputStream.writeObject(random);
-
-        outputStream.writeObject(topicIndex);
-        outputStream.writeObject(wordIndex);
-
-        outputStream.writeBoolean(trained);
     }
 
     public class Sampler {
@@ -249,5 +197,57 @@ public class LLDA implements Serializable {
         public void sampleForOneDocument (Document document) {
             sampleForOneDocument(document, documentTopics);
         }
+    }
+
+    public static LLDA read (File file) throws IOException, ClassNotFoundException {
+        LLDA llda;
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        llda = (LLDA) inputStream.readObject();
+        inputStream.close();
+        return llda;
+    }
+
+    private void readObject (ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+        topicCounts = (int[]) inputStream.readObject();
+        wordTopicCounts = (int[][]) inputStream.readObject();
+
+        alpha = inputStream.readDouble();
+        beta = inputStream.readDouble();
+        betaSum = inputStream.readDouble();
+
+        numTopics = inputStream.readInt();
+        numWords = inputStream.readInt();
+
+        random = (Randoms) inputStream.readObject();
+
+        topicIndex = (Index) inputStream.readObject();
+        wordIndex = (Index) inputStream.readObject();
+
+        trained = inputStream.readBoolean();
+    }
+
+    public void write (File file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    private void writeObject (ObjectOutputStream outputStream) throws IOException {
+        outputStream.writeObject(topicCounts);
+        outputStream.writeObject(wordTopicCounts);
+
+        outputStream.writeDouble(alpha);
+        outputStream.writeDouble(beta);
+        outputStream.writeDouble(betaSum);
+
+        outputStream.writeInt(numTopics);
+        outputStream.writeInt(numWords);
+
+        outputStream.writeObject(random);
+
+        outputStream.writeObject(topicIndex);
+        outputStream.writeObject(wordIndex);
+
+        outputStream.writeBoolean(trained);
     }
 }
