@@ -7,7 +7,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-
+/**
+ * Labeled Latent Dirichlet Allocation.
+ *
+ * The class implements a simple and naive version of L-LDA using
+ * Gibbs sampling. This code is probably much slower than you would want
+ * it to be, but it serves its goal for educational purposes and
+ * easy extension possibilities.
+ *
+ * @author Folgert Karsdorp
+ */
 public class LLDA implements Serializable {
     public static Logger logger = Logger.getLogger(LLDA.class.getName());
 

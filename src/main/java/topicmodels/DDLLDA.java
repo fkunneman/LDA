@@ -1,6 +1,5 @@
 package topicmodels;
 
-
 import util.*;
 
 import java.io.*;
@@ -8,9 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-
 /**
  * Document Dependent Labeled Latent Dirichlet Allocation.
+ *
  * This class implements a simplistic version of DDLLDA using Gibbs sampling.
  * This code is probably much slower than what could be achieved, but it primarily
  * serves educational purposes
