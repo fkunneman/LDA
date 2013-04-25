@@ -9,6 +9,14 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 
+/**
+ * Document Dependent Labeled Latent Dirichlet Allocation.
+ * This class implements a simplistic version of DDLLDA using Gibbs sampling.
+ * This code is probably much slower than what could be achieved, but it primarily
+ * serves educational purposes
+ *
+ * @author Folgert Karsdorp
+ */
 public class DDLLDA implements Serializable {
 
     public static Logger logger = Logger.getLogger(DDLLDA.class.getName());
@@ -21,7 +29,7 @@ public class DDLLDA implements Serializable {
     public int numWords;
 
     // hyper-parameters
-    public double alpha;
+    public double alpha; // TODO, see whether we can leave this out.
     public double beta;
     public double gamma;
     public double alphaSum;
@@ -42,6 +50,14 @@ public class DDLLDA implements Serializable {
     protected Randoms random;
     protected Boolean trained = false;
 
+    /**
+     * Initialize an instance of DDLLDA.
+     *
+     * @param alphaSum smoothing sum over the topic distribution;
+     * @param beta smoothing over the unigram distribution;
+     * @param gamma smoothing over the type distribution;
+     * @param corpus the corpus from which to learn the distributions;
+     */
     public DDLLDA(double alphaSum, double beta, double gamma, Corpus corpus) {
         this.numTopics = corpus.getNumTopics();
         this.numTypes = corpus.getNumTypes();
@@ -66,6 +82,15 @@ public class DDLLDA implements Serializable {
         random = new Randoms(20);
     }
 
+    /**
+     * Given a corpus, where each document has been assigned to a category and a number
+     * of labels or topics have been assigned to the document, learn the type-topic
+     * distributions, the distributions of types over documents, the distributions
+     * of topics over documents and the word distributions of topics.
+     *
+     * @param iterations how many iterations to run the sampler;
+     * @param corpus the corpus to run the sampler on;
+     */
     public void train (int iterations, Corpus corpus) {
         learnSampler = new DDLLDA.LearnSampler();
         for (Document document : corpus) {
@@ -81,6 +106,13 @@ public class DDLLDA implements Serializable {
         trained = true;
     }
 
+    /**
+     * Given a corpus of test documents, try to assign to each token
+     * a type and a topic based on a previously learned DDLLDA model.
+     *
+     * @param iterations how many iterations to run the sampler;
+     * @param corpus the corpus to run the sampler on;
+     */
     public void infer (int iterations, Corpus corpus) {
         if (!trained) {
             throw new IllegalStateException("The model is not trained yet!");
@@ -99,9 +131,17 @@ public class DDLLDA implements Serializable {
         }
     }
 
+    /**
+     * Write the either learned or inferred topic distributions to a file.
+     *
+     * @param file the name of the file to write the results;
+     * @param corpus the corpus containing the topic and type assignments;
+     * @param smooth parameter to use for smoothing the topic distributions on output;
+     * @throws IOException
+     */
     public void writeTopicDistributions (File file, Corpus corpus, double smooth) throws IOException {
         PrintWriter printer = new PrintWriter(file);
-        printer.print("type\tsource\ttopic:proportion...\n");
+        printer.print("source\ttopic:proportion...\n");
         for (Document document : corpus) {
             printer.print(document.getSource() + "\t");
             IDSorter[] sortedTopics = new IDSorter[numTopics];
@@ -127,6 +167,14 @@ public class DDLLDA implements Serializable {
         printer.close();
     }
 
+    /**
+     * Read an existing serialized model from disk.
+     *
+     * @param file the filename of the model to read
+     * @return the model
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public static DDLLDA read (File file) throws IOException, ClassNotFoundException {
         DDLLDA ddllda;
         ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
@@ -160,6 +208,12 @@ public class DDLLDA implements Serializable {
         trained = inputStream.readBoolean();
     }
 
+    /**
+     * Write a model serialized to disk.
+     *
+     * @param file the name of the file to write the model to;
+     * @throws IOException
+     */
     public void write (File file) throws IOException {
         ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
         outputStream.writeObject(this);
@@ -191,9 +245,18 @@ public class DDLLDA implements Serializable {
         outputStream.writeBoolean(trained);
     }
 
-    /* Base sampler, sub-classed by LearnSampler and InferSampler.*/
+    /**
+     * Base sampler, sub-classed by LearnSampler and InferSampler.
+     */
     public class Sampler {
 
+        /**
+         * Sample the topics and types for all tokens of a document.
+         *
+         * @param document an instance of Document for which we sample the topics and types;
+         * @param labels the set of possible labels to sample from for this document;
+         * @param types the set of possible types to sample from fro this document;
+         */
         public void sampleForOneDocument (Document document, ArrayList<Integer> labels, ArrayList<Integer> types) {
             int[] assignment;
             int[] docTypeCounts = new int[numTypes];
@@ -218,6 +281,11 @@ public class DDLLDA implements Serializable {
             }
         }
 
+        /**
+         * Sample the topics and types for all tokens of a document.
+         *
+         * @param document an instance of Document for which we sample the topics and types;
+         */
         public void sampleForOneDocument (Document document) {
             sampleForOneDocument(document, document.getLabels(), document.getTypes());
         }
@@ -225,6 +293,16 @@ public class DDLLDA implements Serializable {
         public void increment (int topic, int word, int type) {}
         public void decrement (int topic, int word, int type) {}
 
+        /**
+         * Sample a type and a topic for the current word. This method is computationally
+         * quite heavy and should and could probably be optimized further.
+         *
+         * @param word the word for which we sample a topic and a type;
+         * @param labels the set of labels to sample a topic from;
+         * @param types the set of types to sample a type from;
+         * @param docTypeCounts for each type, how often does it occur in the document under investigation?
+         * @return an array consisting of a word, a topic and a type;
+         */
         public int[] sample (int word, ArrayList<Integer> labels, ArrayList<Integer> types, int[] docTypeCounts) {
             double[][] topicTermScores = new double[labels.size()][types.size()];
             double sum = 0.0;
@@ -258,9 +336,19 @@ public class DDLLDA implements Serializable {
         }
     }
 
-    // Sampler for training a model.
+    /**
+     * Sampler for training a model.
+     */
     public class LearnSampler extends DDLLDA.Sampler {
 
+        /**
+         * Add a document to the sampler, which means that we randomly assign to each token
+         * a type (sampled from the set of types associated with this document) and
+         * a topic (again sampled from the set of topics associated with this document).
+         * Increment the new assigned topic and type in the count matrices.
+         *
+         * @param document an instance of Document for which to do the random assignments;
+         */
         public void addDocument (Document document) {
             ArrayList<Integer> types = document.getTypes();
             ArrayList<Integer> labels = document.getLabels();
@@ -273,6 +361,13 @@ public class DDLLDA implements Serializable {
             }
         }
 
+        /**
+         * Update the count matrices by decrementing the appropriate counts.
+         *
+         * @param topic the topic to update;
+         * @param word the word to update;
+         * @param type the type to update;
+         */
         public void decrement (int topic, int word, int type) {
             typeCounts[type]--;
             typeTopicCounts[type][topic]--;
@@ -280,6 +375,13 @@ public class DDLLDA implements Serializable {
             wordTopicCounts[word][topic]--;
         }
 
+        /**
+         * Update the count matrices by incrementing the appropriate counts.
+         *
+         * @param topic the topic to update.
+         * @param word the word to update.
+         * @param type the type to update.
+         */
         public void increment (int topic, int word, int type) {
             typeCounts[type]++;
             typeTopicCounts[type][topic]++;
@@ -288,7 +390,9 @@ public class DDLLDA implements Serializable {
         }
     }
 
-    // Sampler for inference on unseen documents
+    /**
+     *  Sampler for inference on unseen documents.
+     */
     public class InferSampler extends DDLLDA.Sampler {
 
         private ArrayList<Integer> documentTypes;
@@ -305,6 +409,13 @@ public class DDLLDA implements Serializable {
             }
         }
 
+        /**
+         * Add a document to the sampler, which means that we randomly assign to each
+         * token a type (sampled from all possible types discovered during training) and
+         * a topic (sampled from all possible topics discovered during training).
+         *
+         * @param document an instance of Document for which to do the random assignments;
+         */
         public void addDocument (Document document) {
             for (int position = 0; position < document.size(); position++) {
                 int topic = random.choice(documentTopics);
@@ -314,6 +425,11 @@ public class DDLLDA implements Serializable {
             }
         }
 
+        /**
+         * Sample the topics and types for all tokens of a document.
+         *
+         * @param document an instance of Document for which we sample the topics and types;
+         */
         public void sampleForOneDocument (Document document) {
             sampleForOneDocument(document, documentTopics, documentTypes);
         }
