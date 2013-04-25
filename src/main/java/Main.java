@@ -3,6 +3,8 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import topicmodels.DDLLDA;
+import topicmodels.LDA;
+import topicmodels.LLDA;
 import util.Corpus;
 
 import java.io.File;
@@ -42,6 +44,18 @@ public class Main {
                 .type(Integer.class)
                 .help("The number of iterations for Gibbs sampling.");
 
+        parser.addArgument("--nTopics")
+                .dest("numTopics")
+                .type(Integer.class)
+                .setDefault(100)
+                .help("The number of topics to use in LDA.");
+
+        parser.addArgument("--alpha")
+                .dest("alpha")
+                .type(Double.class)
+                .setDefault(0.1)
+                .help("Alpha parameter: smooting over topic distribution.");
+
         parser.addArgument("--beta")
                 .dest("beta")
                 .type(Double.class)
@@ -55,6 +69,8 @@ public class Main {
                 .help("Gamma parameter: smoothing over the topic distribution.");
 
         Namespace ns = parser.parseArgs(args);
+        Integer numTopics = ns.getInt("numTopics");
+        Double alpha = ns.getDouble("alpha");
         Double beta = ns.getDouble("beta");
         Double gamma = ns.getDouble("gamma");
         Integer iterations = ns.getInt("iterations");
@@ -75,16 +91,44 @@ public class Main {
         if (model == null) {
             Corpus corpus = new Corpus();
             corpus.readFile(file);
-            DDLLDA ddllda = new DDLLDA(50.0, beta, gamma, corpus);
-            ddllda.train(iterations, corpus);
-            ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
-            ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
+            if (system.equals("LLDA")) {
+                LLDA llda = new LLDA(alpha, beta, corpus);
+                llda.train(iterations, corpus);
+                llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                llda.write(new File(outputDirectory + File.separator + "model.lda"));
+            } else if (system.equals("DDLLA")) {
+                DDLLDA ddllda = new DDLLDA(50.0, beta, gamma, corpus);
+                ddllda.train(iterations, corpus);
+                ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
+            } else {
+                LDA lda = new LDA (numTopics, alpha, beta, corpus);
+                lda.train(iterations, corpus);
+                lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                lda.write(new File(outputDirectory + File.separator + "model.lda"));
+            }
+
         } else {
-            DDLLDA ddllda = DDLLDA.read(new File(model));
-            Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
-            corpus.readFile(file);
-            ddllda.infer(iterations, corpus);
-            ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
+            if (system.equals("LLDA")) {
+                LLDA llda = LLDA.read(new File(model));
+                Corpus corpus = new Corpus(llda.wordIndex, llda.topicIndex);
+                corpus.readFile(file);
+                llda.infer(iterations, corpus);
+                llda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, alpha);
+
+            } else if (system.equals("DDLLDA")) {
+                DDLLDA ddllda = DDLLDA.read(new File(model));
+                Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
+                corpus.readFile(file);
+                ddllda.infer(iterations, corpus);
+                ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
+            } else {
+                LDA lda = LDA.read(new File(model));
+                Corpus corpus = new Corpus(lda.wordIndex, lda.topicIndex);
+                corpus.readFile(file);
+                lda.infer(iterations, corpus);
+                lda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, alpha);
+            }
         }
     }
 }
