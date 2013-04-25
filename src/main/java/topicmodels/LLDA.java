@@ -1,12 +1,10 @@
 package topicmodels;
 
-import util.Corpus;
-import util.Document;
-import util.Index;
-import util.Randoms;
+import util.*;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class LLDA implements Serializable {
@@ -77,7 +75,86 @@ public class LLDA implements Serializable {
                 inferSampler.sampleForOneDocument(document);
             }
         }
+    }
 
+    public void writeTopicDistributions (File file, Corpus corpus, double smooth) throws IOException {
+        PrintWriter printer = new PrintWriter(file);
+        printer.print("source\ttopic:proportion...\n");
+        for (Document document : corpus) {
+            printer.print(document.getSource() + "\t");
+            IDSorter[] sortedTopics = new IDSorter[numTopics];
+            int[] topicCounts = new int[numTopics];
+            int docLen = 0;
+            for (int position = 0; position < document.size(); position++) {
+                int word = document.getToken(position);
+                if (word >= numWords) { continue; }
+                docLen++;
+                topicCounts[document.getTopic(position)]++;
+            }
+            for (int topic = 0; topic < numTopics; topic++) {
+                sortedTopics[topic] = new IDSorter(topic, (smooth + topicCounts[topic]) / (docLen));
+            }
+            Arrays.sort(sortedTopics);
+            for (int index = 0; index < numTopics; index++) {
+                double score = sortedTopics[index].getValue();
+                if (score == 0.0) { break; }
+                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
+            }
+            printer.print("\n");
+        }
+        printer.close();
+    }
+
+    public static LLDA read (File file) throws IOException, ClassNotFoundException {
+        LLDA llda;
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        llda = (LLDA) inputStream.readObject();
+        inputStream.close();
+        return llda;
+    }
+
+    private void readObject (ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+        topicCounts = (int[]) inputStream.readObject();
+        wordTopicCounts = (int[][]) inputStream.readObject();
+
+        alpha = inputStream.readDouble();
+        beta = inputStream.readDouble();
+        betaSum = inputStream.readDouble();
+
+        numTopics = inputStream.readInt();
+        numWords = inputStream.readInt();
+
+        random = (Randoms) inputStream.readObject();
+
+        topicIndex = (Index) inputStream.readObject();
+        wordIndex = (Index) inputStream.readObject();
+
+        trained = inputStream.readBoolean();
+    }
+
+    public void write (File file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    private void writeObject (ObjectOutputStream outputStream) throws IOException {
+        outputStream.writeObject(topicCounts);
+        outputStream.writeObject(wordTopicCounts);
+
+        outputStream.writeDouble(alpha);
+        outputStream.writeDouble(beta);
+        outputStream.writeDouble(betaSum);
+
+        outputStream.writeInt(numTopics);
+        outputStream.writeInt(numWords);
+
+        outputStream.writeObject(random);
+
+        outputStream.writeObject(topicIndex);
+        outputStream.writeObject(wordIndex);
+
+        outputStream.writeBoolean(trained);
     }
 
     public class Sampler {
