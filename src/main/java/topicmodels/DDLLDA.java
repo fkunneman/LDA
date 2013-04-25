@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class DDLLDA implements Serializable {
 
-    public Logger logger = Logger.getLogger(DDLLDA.class.getName());
+    public static Logger logger = Logger.getLogger(DDLLDA.class.getName());
 
     public DDLLDA.LearnSampler learnSampler;
     public DDLLDA.InferSampler inferSampler;
@@ -67,7 +67,6 @@ public class DDLLDA implements Serializable {
     }
 
     public void train (int iterations, Corpus corpus) {
-        logger = Logger.getLogger(DDLLDA.class.getName());
         learnSampler = new DDLLDA.LearnSampler();
         for (Document document : corpus) {
             learnSampler.addDocument(document);
@@ -86,7 +85,6 @@ public class DDLLDA implements Serializable {
         if (!trained) {
             throw new IllegalStateException("The model is not trained yet!");
         }
-        logger = Logger.getLogger(DDLLDA.class.getName());
 
         inferSampler = new InferSampler();
         for (Document document : corpus) {
@@ -267,8 +265,8 @@ public class DDLLDA implements Serializable {
 
         public void addDocument (Document document) {
             ArrayList<Integer> types = document.getTypes();
+            ArrayList<Integer> labels = document.getLabels();
             for (int position = 0; position < document.size(); position++) {
-                ArrayList<Integer> labels = document.getLabels();
                 int topic = random.choice(labels);
                 int type = random.choice(types);
                 document.setTopic(position, topic);
