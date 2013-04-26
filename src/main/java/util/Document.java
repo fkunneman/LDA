@@ -2,6 +2,10 @@ package util;
 
 import java.util.ArrayList;
 
+/**
+ * A Document is a data structure that stores the tokens of a text, next
+ * to its topic assignments and in DDLLDA, its type assignments.
+ */
 public class Document {
 
     private final ArrayList<Integer> tokens;
