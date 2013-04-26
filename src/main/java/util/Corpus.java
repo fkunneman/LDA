@@ -7,6 +7,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/**
+ * This class implements a simple data structure that represents
+ * an iterable container of Documents. Besides the individual documents
+ * a corpus consists of the vocabulary index, and, if applicable, the
+ * label and type index.
+ */
 public class Corpus implements Iterable<Document> {
     private final Index wordIndex;
     private final Index labelIndex;
@@ -46,6 +52,18 @@ public class Corpus implements Iterable<Document> {
     public int getNumTypes () { return typeIndex.size(); }
     public int getNumWords () { return wordIndex.size(); }
 
+    /**
+     * Read a file into a Corpus object. At this moment all files should
+     * be four column, tab separated where the first column gives the id
+     * number of the document, the second its document category (or categories)
+     * the third should give the labels attached to the document and the fourth
+     * is the text itself. Both the document categories and the labels should be
+     * comma separated. The text itself will be tokenized on spaces, so make sure
+     * that you have already done proper tokenization somewhere else.
+     *
+     * @param filename: a filename pointing to the file to read.
+     * @throws IOException
+     */
     public void readFile (String filename) throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(filename));
         for (String line = in.readLine(); line != null; line = in.readLine()) {
