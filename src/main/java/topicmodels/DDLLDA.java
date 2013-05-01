@@ -31,9 +31,9 @@ public class DDLLDA implements Serializable {
     public double alpha; // TODO, see whether we can leave this out.
     public double beta;
     public double gamma;
-    public double alphaSum;
+    public double alphaSum; // TODO, add to the sampling function
     public double betaSum;
-    public double gammaSum;
+    public double gammaSum; // TODO, check if this is correct
 
     // count matrices
     protected int[] topicCounts;
