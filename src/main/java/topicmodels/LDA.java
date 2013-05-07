@@ -209,8 +209,11 @@ public class LDA implements Serializable {
                 sum += score;
                 termTopicScores[topic] = score;
             }
+            // scaled sample because of unnormalized termTopicScores.
             double sample = random.nextUniform() * sum;
+            // initialize topic on -1 (no topic)
             int topic = -1;
+            // draw a sample with respect to distribution in termTopicScores
             while (sample > 0.0) {
                 topic++;
                 sample -= termTopicScores[topic];

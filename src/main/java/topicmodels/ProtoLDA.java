@@ -13,7 +13,6 @@ public class ProtoLDA {
     public static Logger logger = Logger.getLogger(ProtoLDA.class.getName());
 
     LearnSampler learnSampler;
-    InferSampler inferSampler;
 
     protected int regularTopics;
     protected int numProtoTopics;
@@ -112,28 +111,6 @@ public class ProtoLDA {
     }
 
     /**
-     * Given a corpus of test documents, try to assign to each token
-     * a topic based on a previously learned LLDA model.
-     *
-     * @param iterations how many iterations to run the sampler;
-     * @param corpus the corpus to run the sampler on;
-     */
-    public void infer (int iterations, Corpus corpus) {
-        inferSampler = new InferSampler();
-        for (Document document : corpus) {
-            inferSampler.addDocument(document);
-        }
-        logger.info("Sampler initialized. " + regularTopics+ " regular topics, " +
-                    (totalTopics - regularTopics) + "proto-topics and " + corpus.size() + " documents.");
-        for (int iteration = 1; iteration <= iterations; iteration++) {
-            logger.info("Sampling iteration " + iteration + " started.");
-            for (Document document : corpus) {
-                inferSampler.sampleForOneDocument(document);
-            }
-        }
-    }
-
-    /**
      * Write the either learned or inferred topic distributions to a file.
      *
      * @param file the name of the file to write the results;
@@ -162,7 +139,7 @@ public class ProtoLDA {
             for (int index = 0; index < totalTopics; index++) {
                 double score = sortedTopics[index].getValue();
                 if (score == 0.0) { break; }
-                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
+                printer.print(topicIndex.getItem(sortedTopics[index].getIndex()) + " " + score + " ");
             }
             printer.print("\n");
         }
@@ -280,10 +257,4 @@ public class ProtoLDA {
             wordTopicCounts[word][topic]--;
         }
     }
-
-    /**
-     * Sampler for inference on unseen documents.
-     */
-    public class InferSampler extends Sampler {}
-
 }
