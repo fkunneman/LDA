@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 
 public class Main {
@@ -63,7 +62,7 @@ public class Main {
         parser.addArgument("--alpha")
                 .dest("alpha")
                 .type(Double.class)
-                .setDefault(0.1)
+                .setDefault(0.01)
                 .help("Alpha parameter: smooting over topic distribution.");
 
         parser.addArgument("--beta")
@@ -109,10 +108,11 @@ public class Main {
                 llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 llda.write(new File(outputDirectory + File.separator + "model.lda"));
             } else if (system.equals("DDLLDA")) {
-                DDLLDA ddllda = new DDLLDA(50.0, beta, gamma, corpus);
+                DDLLDA ddllda = new DDLLDA(alpha, beta, gamma, corpus);
                 ddllda.train(iterations, corpus);
                 ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
+                ddllda.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
             } else if (system.equals("ProtoLDA")) {
                 HashMap<String, ArrayList<String>> protoTopics = ProtoTopics.read(protoTopicFile);
                 ProtoLDA lda = new ProtoLDA(numTopics, alpha, beta, gamma, corpus, protoTopics);

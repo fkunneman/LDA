@@ -28,10 +28,9 @@ public class DDLLDA implements Serializable {
     public int numWords;
 
     // hyper-parameters
-    public double alpha; // TODO, see whether we can leave this out.
+    public double alpha;
     public double beta;
     public double gamma;
-    public double alphaSum; // TODO, add to the sampling function
     public double betaSum;
     public double gammaSum; // TODO, check if this is correct
 
@@ -52,20 +51,19 @@ public class DDLLDA implements Serializable {
     /**
      * Initialize an instance of DDLLDA.
      *
-     * @param alphaSum smoothing sum over the topic distribution;
+     * @param alpha smoothing sum over the topic distribution;
      * @param beta smoothing over the unigram distribution;
      * @param gamma smoothing over the type distribution;
      * @param corpus the corpus from which to learn the distributions;
      */
-    public DDLLDA(double alphaSum, double beta, double gamma, Corpus corpus) {
+    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus) {
         this.numTopics = corpus.getNumTopics();
         this.numTypes = corpus.getNumTypes();
         this.numWords = corpus.getNumWords();
 
-        this.alphaSum = alphaSum;
         this.beta = beta;
         this.gamma = gamma;
-        this.alpha = alphaSum / numTopics;
+        this.alpha = alpha;
         this.betaSum = beta * numWords;
         this.gammaSum = gamma * numTypes;
 
@@ -159,11 +157,41 @@ public class DDLLDA implements Serializable {
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
                 if (score == 0.0) { break; }
-                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
+                printer.print(topicIndex.getItem(sortedTopics[index].getIndex()) + " " + score + " ");
             }
             printer.print("\n");
         }
         printer.close();
+    }
+
+    public void printTopicDistribution (File file) throws IOException {
+        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+        output.print(getTopicDistribution());
+        output.close();
+    }
+
+    private String getTopicDistribution () {
+        StringBuilder output = new StringBuilder();
+        IDSorter[] sortedWords = new IDSorter[numWords];
+        for (int topic = 0; topic < numTopics; topic++) {
+            for (int word = 0; word < numWords; word++) {
+                sortedWords[word] = new IDSorter(word, (double) wordTopicCounts[word][topic]);
+            }
+            Arrays.sort(sortedWords);
+            output.append(topicIndex.getItem(topic))
+                  .append(" ")
+                  .append("count: ")
+                  .append(topicCounts[topic])
+                  .append(" ");
+            for (int word = 0; word < numWords; word++) {
+                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
+                      .append(":")
+                      .append(sortedWords[word].getValue())
+                      .append(" ");
+            }
+            output.append("\n");
+        }
+        return output.toString();
     }
 
     /**
@@ -308,7 +336,7 @@ public class DDLLDA implements Serializable {
             for (int i = 0; i < types.size(); i++) {
                 int type = types.get(i);
                 double P_T = (gammaSum + typeCounts[type]);
-                double P_Dt = (gamma + docTypeCounts[type]);
+                double P_Dt = (alpha + docTypeCounts[type]);
                 for (int j = 0; j < labels.size(); j++) {
                     int topic = labels.get(j);
                     double score = P_Dt * // P(T|D)

@@ -138,7 +138,7 @@ public class LDA implements Serializable {
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
                 if (score == 0.0) { break; }
-                printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
+                printer.print(topicIndex.getItem(sortedTopics[index].getIndex()) + " " + score + " ");
             }
             printer.print("\n");
         }
