@@ -35,8 +35,8 @@ public class Main {
         parser.addArgument("-s", "--system")
                 .dest("system")
                 .type(String.class)
-                .choices("LDA", "LLDA", "DDLLDA")
-                .help("The model to use for training or inference (LDA, LLDA, DDLLDA)");
+                .choices("LDA", "LLDA", "DDLLDA", "ProtoLDA")
+                .help("The model to use for training or inference (LDA, LLDA, DDLLDA, ProtoLDA)");
 
         parser.addArgument("-m", "--model")
                 .dest("model")
@@ -61,27 +61,27 @@ public class Main {
 
         parser.addArgument("--alpha")
                 .dest("alpha")
-                .type(Double.class)
+                .type(double.class)
                 .setDefault(0.01)
                 .help("Alpha parameter: smooting over topic distribution.");
 
         parser.addArgument("--beta")
                 .dest("beta")
-                .type(Double.class)
+                .type(double.class)
                 .setDefault(0.01)
                 .help("Beta parameter: smoothing over unigram distribution.");
 
         parser.addArgument("--gamma")
                 .dest("gamma")
-                .type(Double.class)
+                .type(double.class)
                 .setDefault(0.01)
                 .help("Gamma parameter: smoothing over the topic distribution.");
 
         Namespace ns = parser.parseArgs(args);
         Integer numTopics = ns.getInt("numTopics");
-        Double alpha = ns.getDouble("alpha");
-        Double beta = ns.getDouble("beta");
-        Double gamma = ns.getDouble("gamma");
+        double alpha = ns.getDouble("alpha");
+        double beta = ns.getDouble("beta");
+        double gamma = ns.getDouble("gamma");
         Integer iterations = ns.getInt("iterations");
         String file = ns.getString("file");
         String model = ns.getString("model");
@@ -118,11 +118,13 @@ public class Main {
                 ProtoLDA lda = new ProtoLDA(numTopics, alpha, beta, gamma, corpus, protoTopics);
                 lda.train(iterations, corpus);
                 lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                lda.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
             } else {
                 LDA lda = new LDA (numTopics, alpha, beta, corpus);
                 lda.train(iterations, corpus);
                 lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 lda.write(new File(outputDirectory + File.separator + "model.lda"));
+                lda.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
             }
 
         } else {

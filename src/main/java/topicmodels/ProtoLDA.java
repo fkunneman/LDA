@@ -2,9 +2,7 @@ package topicmodels;
 
 import util.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -63,11 +61,11 @@ public class ProtoLDA {
         }
         // we only need a asymmetric beta prior for our proto-topics.
         protoBeta = new double[protoTopics.size()][wordIndex.size()];
-        // first, fill the array with the default beta value.
-        Arrays.fill(protoBeta, beta);
         int topic = 0;
         // now for each topic and its prototypical words
         for (ArrayList<String> words : protoTopics.values()) {
+            // first, fill the array with the default beta value.
+            Arrays.fill(protoBeta[topic], beta);
             for (String word : words) {
                 // add the gamma prior to the beta prior.
                 protoBeta[topic][wordIndex.getId(word)] += gamma;
@@ -144,6 +142,36 @@ public class ProtoLDA {
             printer.print("\n");
         }
         printer.close();
+    }
+
+    public void printTopicDistribution (File file) throws IOException {
+        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+        output.print(getTopicDistribution());
+        output.close();
+    }
+
+    private String getTopicDistribution () {
+        StringBuilder output = new StringBuilder();
+        IDSorter[] sortedWords = new IDSorter[numWords];
+        for (int topic = 0; topic < totalTopics; topic++) {
+            for (int word = 0; word < numWords; word++) {
+                sortedWords[word] = new IDSorter(word, (double) wordTopicCounts[word][topic]);
+            }
+            Arrays.sort(sortedWords);
+            output.append(topicIndex.getItem(topic))
+                    .append(" ")
+                    .append("count: ")
+                    .append(topicCounts[topic])
+                    .append(" ");
+            for (int word = 0; word < numWords; word++) {
+                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
+                        .append(":")
+                        .append(sortedWords[word].getValue())
+                        .append(" ");
+            }
+            output.append("\n");
+        }
+        return output.toString();
     }
 
     /**

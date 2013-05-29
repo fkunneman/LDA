@@ -145,6 +145,36 @@ public class LDA implements Serializable {
         printer.close();
     }
 
+    public void printTopicDistribution (File file) throws IOException {
+        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+        output.print(getTopicDistribution());
+        output.close();
+    }
+
+    private String getTopicDistribution () {
+        StringBuilder output = new StringBuilder();
+        IDSorter[] sortedWords = new IDSorter[numWords];
+        for (int topic = 0; topic < numTopics; topic++) {
+            for (int word = 0; word < numWords; word++) {
+                sortedWords[word] = new IDSorter(word, (double) wordTopicCounts[word][topic]);
+            }
+            Arrays.sort(sortedWords);
+            output.append(topicIndex.getItem(topic))
+                    .append(" ")
+                    .append("count: ")
+                    .append(topicCounts[topic])
+                    .append(" ");
+            for (int word = 0; word < numWords; word++) {
+                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
+                        .append(":")
+                        .append(sortedWords[word].getValue())
+                        .append(" ");
+            }
+            output.append("\n");
+        }
+        return output.toString();
+    }
+
     /**
      * Base sampler, sub-classed by LearnSampler and InferSampler
      */
