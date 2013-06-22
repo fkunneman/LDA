@@ -174,6 +174,39 @@ public class ProtoLDA {
         return output.toString();
     }
 
+    public void printPhi(File file) throws IOException {
+        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+        output.print(printPhi());
+        output.close();
+    }
+
+    public String printPhi () {
+        StringBuilder output = new StringBuilder();
+        IDSorter[] sortedWords = new IDSorter[numWords];
+        for (int topic = 0; topic < totalTopics; topic++) {
+            if (topic < regularTopics) {
+                for (int word = 0; word < numWords; word++) {
+                    sortedWords[word] = new IDSorter(word, (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]));
+                }
+            } else {
+                System.out.println(topic-regularTopics + " " + protoBeta.length);
+                for (int word = 0; word < numWords; word++) {
+                    sortedWords[word] = new IDSorter(word, protoBeta[topic-regularTopics][word] / (betaSum + topicCounts[topic]));
+                }
+            }
+            Arrays.sort(sortedWords);
+            output.append(topicIndex.getItem(topic)).append(" ");
+            for (int word = 0; word < numWords; word++) {
+                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
+                        .append(":")
+                        .append(sortedWords[word].getValue())
+                        .append(" ");
+            }
+            output.append("\n");
+        }
+        return output.toString();
+    }
+
     /**
      * Base sampler, sub-classed by LearnSampler and InferSampler
      */

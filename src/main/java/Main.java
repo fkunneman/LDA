@@ -2,10 +2,7 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import topicmodels.DDLLDA;
-import topicmodels.LDA;
-import topicmodels.LLDA;
-import topicmodels.ProtoLDA;
+import topicmodels.*;
 import util.Corpus;
 import util.ProtoTopics;
 
@@ -35,8 +32,8 @@ public class Main {
         parser.addArgument("-s", "--system")
                 .dest("system")
                 .type(String.class)
-                .choices("LDA", "LLDA", "DDLLDA", "ProtoLDA")
-                .help("The model to use for training or inference (LDA, LLDA, DDLLDA, ProtoLDA)");
+                .choices("LDA", "LLDA", "DDLLDA", "ProtoLDA", "ATM")
+                .help("The model to use for training or inference (LDA, LLDA, DDLLDA, ProtoLDA, ATM)");
 
         parser.addArgument("-m", "--model")
                 .dest("model")
@@ -61,27 +58,27 @@ public class Main {
 
         parser.addArgument("--alpha")
                 .dest("alpha")
-                .type(double.class)
+                .type(Double.class)
                 .setDefault(0.01)
                 .help("Alpha parameter: smooting over topic distribution.");
 
         parser.addArgument("--beta")
                 .dest("beta")
-                .type(double.class)
+                .type(Double.class)
                 .setDefault(0.01)
                 .help("Beta parameter: smoothing over unigram distribution.");
 
         parser.addArgument("--gamma")
                 .dest("gamma")
-                .type(double.class)
+                .type(Double.class)
                 .setDefault(0.01)
                 .help("Gamma parameter: smoothing over the topic distribution.");
 
         Namespace ns = parser.parseArgs(args);
         Integer numTopics = ns.getInt("numTopics");
-        double alpha = ns.getDouble("alpha");
-        double beta = ns.getDouble("beta");
-        double gamma = ns.getDouble("gamma");
+        double alpha = (double) ns.getDouble("alpha");
+        double beta = (double) ns.getDouble("beta");
+        double gamma = (double) ns.getDouble("gamma");
         Integer iterations = ns.getInt("iterations");
         String file = ns.getString("file");
         String model = ns.getString("model");
@@ -119,6 +116,12 @@ public class Main {
                 lda.train(iterations, corpus);
                 lda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 lda.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
+                lda.printPhi(new File(outputDirectory + File.separator + "phi.txt"));
+            } else if (system.equals("ATM")) {
+                ATM atm = new ATM(numTopics, alpha, beta, gamma, corpus);
+                atm.train(iterations, corpus);
+                atm.printAuthorTopicDistribution(new File(outputDirectory + File.separator + "author-topic-distribution.txt"));
+                atm.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
             } else {
                 LDA lda = new LDA (numTopics, alpha, beta, corpus);
                 lda.train(iterations, corpus);
