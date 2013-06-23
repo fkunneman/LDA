@@ -151,7 +151,7 @@ public class ATM {
             Arrays.sort(sortedTopics);
             output.append(typeIndex.getItem(author)).append("\t");
             for (int topic = 0; topic < numTopics; topic++) {
-                output.append(topic).append(":").append(sortedTopics[topic].getValue()).append(" ");
+                output.append(topicIndex.getItem(sortedTopics[topic].getIndex())).append(":").append(sortedTopics[topic].getValue()).append(" ");
             }
             output.append("\n");
         }
@@ -178,10 +178,12 @@ public class ATM {
                     .append(topicCounts[topic])
                     .append(" ");
             for (int word = 0; word < numWords; word++) {
-                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
-                        .append(":")
-                        .append(sortedWords[word].getValue())
-                        .append(" ");
+                if (sortedWords[word].getValue() > 0) {
+                    output.append(wordIndex.getItem(sortedWords[word].getIndex()))
+                            .append(":")
+                            .append(sortedWords[word].getValue())
+                            .append(" ");
+                }
             }
             output.append("\n");
         }
