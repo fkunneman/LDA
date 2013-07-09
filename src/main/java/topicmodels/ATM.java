@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 public class ATM {
 
-    public static Logger logger = Logger.getLogger(DDLLDA.class.getName());
+    public static Logger logger = Logger.getLogger(TDTM.class.getName());
 
     public ATM.LearnSampler learnSampler;
 

@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 /**
  * A Document is a data structure that stores the tokens of a text, next
- * to its topic assignments and in DDLLDA, its type assignments.
+ * to its topic assignments and in TDTM, its type assignments.
  */
 public class Document {
 

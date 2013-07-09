@@ -17,7 +17,7 @@ public class Main {
     public static void main(String[] args) throws ArgumentParserException, IOException, ClassNotFoundException {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("(DD)(L)LDA")
                 .defaultHelp(true)
-                .description("Simple implementation of LDA, LLDA and DDLLDA.");
+                .description("Simple implementation of LDA, LLDA and TDTM.");
 
         parser.addArgument("-f", "--file")
                 .dest("file")
@@ -32,8 +32,8 @@ public class Main {
         parser.addArgument("-s", "--system")
                 .dest("system")
                 .type(String.class)
-                .choices("LDA", "LLDA", "DDLLDA", "ProtoLDA", "ATM")
-                .help("The model to use for training or inference (LDA, LLDA, DDLLDA, ProtoLDA, ATM)");
+                .choices("LDA", "LLDA", "TDTM", "ProtoLDA", "ATM")
+                .help("The model to use for training or inference (LDA, LLDA, TDTM, ProtoLDA, ATM)");
 
         parser.addArgument("-m", "--model")
                 .dest("model")
@@ -111,11 +111,11 @@ public class Main {
                 llda.train(iterations, corpus);
                 //llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 llda.write(new File(outputDirectory + File.separator + "model.lda"));
-            } else if (system.equals("DDLLDA")) {
-                DDLLDA ddllda = new DDLLDA(alpha, beta, gamma, corpus, seed);
-                ddllda.train(iterations, corpus);
-                ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
-                ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
+            } else if (system.equals("TDTM")) {
+                TDTM tdtm = new TDTM(alpha, beta, gamma, corpus, seed);
+                tdtm.train(iterations, corpus);
+                tdtm.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                tdtm.write(new File(outputDirectory + File.separator + "model.lda"));
             } else if (system.equals("ProtoLDA")) {
                 HashMap<String, ArrayList<String>> protoTopics = ProtoTopics.read(protoTopicFile);
                 ProtoLDA lda = new ProtoLDA(numTopics, alpha, beta, gamma, corpus, protoTopics);
@@ -144,12 +144,12 @@ public class Main {
                 llda.infer(iterations, corpus, alpha);
                 llda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, alpha);
 
-            } else if (system.equals("DDLLDA")) {
-                DDLLDA ddllda = DDLLDA.read(new File(model));
-                Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
+            } else if (system.equals("TDTM")) {
+                TDTM tdtm = TDTM.read(new File(model));
+                Corpus corpus = new Corpus(tdtm.wordIndex, tdtm.topicIndex, tdtm.typeIndex);
                 corpus.readFile(file);
-                ddllda.infer(iterations, corpus, alpha, gamma);
-                ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
+                tdtm.infer(iterations, corpus, alpha, gamma);
+                tdtm.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
             } else {
                 LDA lda = LDA.read(new File(model));
                 Corpus corpus = new Corpus(lda.wordIndex, lda.topicIndex);

@@ -10,18 +10,18 @@ import java.util.logging.Logger;
 /**
  * Document Dependent Labeled Latent Dirichlet Allocation.
  *
- * This class implements a simplistic version of DDLLDA using Gibbs sampling.
+ * This class implements a simplistic version of TDTM using Gibbs sampling.
  * This code is probably much slower than what could be achieved, but it primarily
  * serves educational purposes
  *
  * @author Folgert Karsdorp
  */
-public class DDLLDA implements Serializable {
+public class TDTM implements Serializable {
 
-    public static Logger logger = Logger.getLogger(DDLLDA.class.getName());
+    public static Logger logger = Logger.getLogger(TDTM.class.getName());
 
-    public DDLLDA.LearnSampler learnSampler;
-    public DDLLDA.InferSampler inferSampler;
+    public TDTM.LearnSampler learnSampler;
+    public TDTM.InferSampler inferSampler;
 
     public int numTopics;
     public int numTypes;
@@ -50,16 +50,16 @@ public class DDLLDA implements Serializable {
     protected Boolean trained = false;
 
 
-    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus) {
+    public TDTM(double alpha, double beta, double gamma, Corpus corpus) {
         this(alpha, beta, gamma, corpus, 20L);
     }
     /**
-     * Initialize an instance of DDLLDA.
+     * Initialize an instance of TDTM.
      *
      * @param beta smoothing over the unigram distribution;
      * @param corpus the corpus from which to learn the distributions;
      */
-    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus, long seed) {
+    public TDTM(double alpha, double beta, double gamma, Corpus corpus, long seed) {
         this.numTopics = corpus.getNumTopics();
         this.numTypes = corpus.getNumTypes();
         this.numWords = corpus.getNumWords();
@@ -99,7 +99,7 @@ public class DDLLDA implements Serializable {
      * @param corpus the corpus to run the sampler on;
      */
     public void train (int iterations, Corpus corpus) {
-        learnSampler = new DDLLDA.LearnSampler();
+        learnSampler = new TDTM.LearnSampler();
         for (Document document : corpus) {
             learnSampler.addDocument(document);
         }
@@ -115,7 +115,7 @@ public class DDLLDA implements Serializable {
 
     /**
      * Given a corpus of test documents, try to assign to each token
-     * a type and a topic based on a previously learned DDLLDA model.
+     * a type and a topic based on a previously learned TDTM model.
      *
      * @param iterations how many iterations to run the sampler;
      * @param corpus the corpus to run the sampler on;
@@ -127,14 +127,11 @@ public class DDLLDA implements Serializable {
         Arrays.fill(this.alpha, alpha / numTopics);
         Arrays.fill(this.gamma, gamma / numTypes);
         this.gammaSum = gamma;
-//        this.alphaSum = alpha;
-        //logger.setUseParentHandlers(false);
         logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
         for (Document document : corpus) {
-            inferSampler = new DDLLDA.InferSampler();
+            inferSampler = new TDTM.InferSampler();
             inferSampler.addDocument(document);
             for (int iteration = 1; iteration <= iterations; iteration++) {
-                //logger.info("Sampling iteration " + iteration + " started.");
                 inferSampler.sampleForOneDocument(document);
             }
         }
@@ -167,7 +164,6 @@ public class DDLLDA implements Serializable {
             // TODO this break with an asymmetric prior...
             for (int topic = 0; topic < numTopics; topic++) {
                 sortedTopics[topic] = new IDSorter(topic, (alpha[topic] + topicCounts[topic]) / (docLen + numTopics * alpha[topic]));
-//                sortedTopics[topic] = new IDSorter(topic, (alpha[topic] + topicCounts[topic]) / (docLen + alphaSum));
             }
 
             Arrays.sort(sortedTopics);
@@ -180,12 +176,6 @@ public class DDLLDA implements Serializable {
         }
         printer.close();
     }
-
-//    public void printTopicDistribution (File file) throws IOException {
-//        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
-//        output.print(getTopicDistribution());
-//        output.close();
-//    }
 
     public void printTopicDistribution (File file) throws IOException {
         PrintWriter printer = new PrintWriter(file);
@@ -212,12 +202,12 @@ public class DDLLDA implements Serializable {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static DDLLDA read (File file) throws IOException, ClassNotFoundException {
-        DDLLDA ddllda;
+    public static TDTM read (File file) throws IOException, ClassNotFoundException {
+        TDTM TDTM;
         ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
-        ddllda = (DDLLDA) inputStream.readObject();
+        TDTM = (TDTM) inputStream.readObject();
         inputStream.close();
-        return ddllda;
+        return TDTM;
     }
 
     private void readObject (ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
@@ -379,7 +369,7 @@ public class DDLLDA implements Serializable {
     /**
      * Sampler for training a model.
      */
-    public class LearnSampler extends DDLLDA.Sampler {
+    public class LearnSampler extends TDTM.Sampler {
 
         /**
          * Add a document to the sampler, which means that we randomly assign to each token
@@ -433,7 +423,7 @@ public class DDLLDA implements Serializable {
     /**
      *  Sampler for inference on unseen documents.
      */
-    public class InferSampler extends DDLLDA.Sampler {
+    public class InferSampler extends TDTM.Sampler {
 
         private ArrayList<Integer> documentTypes;
         private ArrayList<Integer> documentTopics;
