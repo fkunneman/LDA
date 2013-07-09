@@ -28,9 +28,10 @@ public class DDLLDA implements Serializable {
     public int numWords;
 
     // hyper-parameters
-    public double alpha;
+    public double[] alpha;
+//    public double alphaSum;
     public double beta;
-    public double gamma;
+    public double[] gamma;
     public double betaSum;
     public double gammaSum; // TODO, check if this is correct
 
@@ -48,22 +49,29 @@ public class DDLLDA implements Serializable {
     protected Randoms random;
     protected Boolean trained = false;
 
+
+    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus) {
+        this(alpha, beta, gamma, corpus, 20L);
+    }
     /**
      * Initialize an instance of DDLLDA.
      *
-     * @param alpha smoothing sum over the topic distribution;
      * @param beta smoothing over the unigram distribution;
-     * @param gamma smoothing over the type distribution;
      * @param corpus the corpus from which to learn the distributions;
      */
-    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus) {
+    public DDLLDA(double alpha, double beta, double gamma, Corpus corpus, long seed) {
         this.numTopics = corpus.getNumTopics();
         this.numTypes = corpus.getNumTypes();
         this.numWords = corpus.getNumWords();
 
         this.beta = beta;
-        this.gamma = gamma;
-        this.alpha = alpha;
+
+        this.alpha = new double[numTopics];
+        Arrays.fill(this.alpha, alpha);
+
+        this.gamma = new double[numTypes];
+        Arrays.fill(this.gamma, gamma);
+
         this.betaSum = beta * numWords;
         this.gammaSum = gamma * numTypes;
 
@@ -76,7 +84,9 @@ public class DDLLDA implements Serializable {
         typeIndex = corpus.getTypeIndex();
         wordIndex = corpus.getWordIndex();
 
-        random = new Randoms(20);
+        random = new Randoms(seed);
+
+        //logger.setUseParentHandlers(false);
     }
 
     /**
@@ -95,7 +105,7 @@ public class DDLLDA implements Serializable {
         }
         logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
         for (int iteration = 1; iteration <= iterations; iteration++) {
-            logger.info("Sampling iteration " + iteration + " started.");
+            //logger.info("Sampling iteration " + iteration + " started.");
             for (Document document: corpus) {
                 learnSampler.sampleForOneDocument(document);
             }
@@ -110,19 +120,21 @@ public class DDLLDA implements Serializable {
      * @param iterations how many iterations to run the sampler;
      * @param corpus the corpus to run the sampler on;
      */
-    public void infer (int iterations, Corpus corpus) {
+    public void infer (int iterations, Corpus corpus, double alpha, double gamma) {
         if (!trained) {
             throw new IllegalStateException("The model is not trained yet!");
         }
-
-        inferSampler = new InferSampler();
-        for (Document document : corpus) {
-            inferSampler.addDocument(document);
-        }
+        Arrays.fill(this.alpha, alpha / numTopics);
+        Arrays.fill(this.gamma, gamma / numTypes);
+        this.gammaSum = gamma;
+//        this.alphaSum = alpha;
+        //logger.setUseParentHandlers(false);
         logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
-        for (int iteration = 1; iteration <= iterations; iteration++) {
-            logger.info("Sampling iteration " + iteration + " started.");
-            for (Document document : corpus) {
+        for (Document document : corpus) {
+            inferSampler = new DDLLDA.InferSampler();
+            inferSampler.addDocument(document);
+            for (int iteration = 1; iteration <= iterations; iteration++) {
+                //logger.info("Sampling iteration " + iteration + " started.");
                 inferSampler.sampleForOneDocument(document);
             }
         }
@@ -146,13 +158,18 @@ public class DDLLDA implements Serializable {
             int docLen = 0;
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);
-                if (word >= numWords) { continue; }
+                if (word >= numWords) {
+                    continue;
+                }
                 docLen++;
                 topicCounts[document.getTopic(position)]++;
             }
+            // TODO this break with an asymmetric prior...
             for (int topic = 0; topic < numTopics; topic++) {
-                sortedTopics[topic] = new IDSorter(topic, (smooth + topicCounts[topic]) / (docLen));
+                sortedTopics[topic] = new IDSorter(topic, (alpha[topic] + topicCounts[topic]) / (docLen + numTopics * alpha[topic]));
+//                sortedTopics[topic] = new IDSorter(topic, (alpha[topic] + topicCounts[topic]) / (docLen + alphaSum));
             }
+
             Arrays.sort(sortedTopics);
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
@@ -164,34 +181,27 @@ public class DDLLDA implements Serializable {
         printer.close();
     }
 
-    public void printTopicDistribution (File file) throws IOException {
-        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
-        output.print(getTopicDistribution());
-        output.close();
-    }
+//    public void printTopicDistribution (File file) throws IOException {
+//        PrintStream output = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+//        output.print(getTopicDistribution());
+//        output.close();
+//    }
 
-    private String getTopicDistribution () {
-        StringBuilder output = new StringBuilder();
+    public void printTopicDistribution (File file) throws IOException {
+        PrintWriter printer = new PrintWriter(file);
         IDSorter[] sortedWords = new IDSorter[numWords];
         for (int topic = 0; topic < numTopics; topic++) {
             for (int word = 0; word < numWords; word++) {
                 sortedWords[word] = new IDSorter(word, (double) wordTopicCounts[word][topic]);
             }
             Arrays.sort(sortedWords);
-            output.append(topicIndex.getItem(topic))
-                  .append(" ")
-                  .append("count: ")
-                  .append(topicCounts[topic])
-                  .append(" ");
+            printer.print(topicIndex.getItem(topic) + " count: " + topicCounts[topic] + " ");
             for (int word = 0; word < numWords; word++) {
-                output.append(wordIndex.getItem(sortedWords[word].getIndex()))
-                      .append(":")
-                      .append(sortedWords[word].getValue())
-                      .append(" ");
+                printer.print(wordIndex.getItem(sortedWords[word].getIndex()) + ":" + sortedWords[word].getValue() + " ");
             }
-            output.append("\n");
+            printer.print("\n");
         }
-        return output.toString();
+        printer.close();
     }
 
     /**
@@ -216,10 +226,10 @@ public class DDLLDA implements Serializable {
         topicCounts = (int[]) inputStream.readObject();
         wordTopicCounts = (int[][]) inputStream.readObject();
 
-        alpha = inputStream.readDouble();
+        alpha = (double[]) inputStream.readObject();
         beta = inputStream.readDouble();
         betaSum = inputStream.readDouble();
-        gamma = inputStream.readDouble();
+        gamma = (double[]) inputStream.readObject();
         gammaSum = inputStream.readDouble();
 
         numTopics = inputStream.readInt();
@@ -253,10 +263,10 @@ public class DDLLDA implements Serializable {
         outputStream.writeObject(topicCounts);
         outputStream.writeObject(wordTopicCounts);
 
-        outputStream.writeDouble(alpha);
+        outputStream.writeObject(alpha);
         outputStream.writeDouble(beta);
         outputStream.writeDouble(betaSum);
-        outputStream.writeDouble(gamma);
+        outputStream.writeObject(gamma);
         outputStream.writeDouble(gammaSum);
 
         outputStream.writeInt(numTopics);
@@ -287,8 +297,11 @@ public class DDLLDA implements Serializable {
         public void sampleForOneDocument (Document document, ArrayList<Integer> labels, ArrayList<Integer> types) {
             int[] assignment;
             int[] docTypeCounts = new int[numTypes];
-            for (Integer type : document.getTypeAssignments()) {
-                docTypeCounts[type]++;
+            for (int position = 0; position < document.size(); position++) {
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
+                docTypeCounts[document.getType(position)]++;
             }
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);
@@ -336,12 +349,12 @@ public class DDLLDA implements Serializable {
             for (int i = 0; i < types.size(); i++) {
                 int type = types.get(i);
                 double P_T = (gammaSum + typeCounts[type]);
-                double P_Dt = (alpha + docTypeCounts[type]);
+                double P_Dt = (gamma[type] + docTypeCounts[type]);
                 for (int j = 0; j < labels.size(); j++) {
                     int topic = labels.get(j);
                     double score = P_Dt * // P(T|D)
                             (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]) * // P(w|t)
-                            (gamma + typeTopicCounts[type][topic]) / P_T;  // P(t|T)
+                            (alpha[topic] + typeTopicCounts[type][topic]) / P_T;  // P(t|T)
                     sum += score;
                     topicTermScores[j][i] = score;
                 }
@@ -425,6 +438,14 @@ public class DDLLDA implements Serializable {
         private ArrayList<Integer> documentTypes;
         private ArrayList<Integer> documentTopics;
 
+        private int[] bestTopicForWord;
+        private int[] bestTypeForTopic;
+
+        private int[] docTypeCounts;
+        private int[][] docTypeTopicCounts;
+        private int[] docTopicCounts;
+        private int[][] docWordTopicCounts;
+
         public InferSampler () {
             documentTypes = new ArrayList<Integer>();
             for (int type = 0; type < numTypes; type++) {
@@ -433,6 +454,40 @@ public class DDLLDA implements Serializable {
             documentTopics = new ArrayList<Integer>();
             for (int topic = 0; topic < numTopics; topic++) {
                 documentTopics.add(topic);
+            }
+
+            docTypeCounts = new int[numTypes];
+            docTypeTopicCounts = new int[numTypes][numTopics];
+            docTopicCounts = new int[numTopics];
+            docWordTopicCounts = new int[numWords][numTopics];
+
+            bestTopicForWord = new int[numWords];
+            for (int word = 0; word < numWords; word++) {
+                int bestTopic = -1;
+                int count = 0;
+                for (int topic = 0; topic < numTopics; topic++) {
+                    if (wordTopicCounts[word][topic] > count) {
+                        count = wordTopicCounts[word][topic];
+                        bestTopic = topic;
+                    }
+                }
+                if (bestTopic == -1) {
+                    throw new IllegalStateException("No topic sampled.");
+                }
+                bestTopicForWord[word] = bestTopic;
+            }
+
+            bestTypeForTopic = new int[numTopics];
+            for (int topic = 0; topic < numTopics; topic++) {
+                int bestType = -1;
+                int count = 0;
+                for (int type = 0; type < numTypes; type++) {
+                    if (typeTopicCounts[type][topic] > count) {
+                        count = typeTopicCounts[type][topic];
+                        bestType = type;
+                    }
+                }
+                bestTypeForTopic[topic] = bestType;
             }
         }
 
@@ -445,11 +500,95 @@ public class DDLLDA implements Serializable {
          */
         public void addDocument (Document document) {
             for (int position = 0; position < document.size(); position++) {
-                int topic = random.choice(documentTopics);
-                int type = random.choice(documentTypes);
-                document.setTopic(position, topic);
-                document.setType(position, type);
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
+                int word = document.getToken(position);
+                // We ignore all OOV types
+                if (word < numWords) {
+                    int topic = bestTopicForWord[word];
+                    int type = bestTypeForTopic[topic];
+                    increment(topic, word, type);
+                    document.setTopic(position, topic);
+                    document.setType(position, type);
+                }
+//                int topic = random.choice(documentTopics);
+//                int type = random.choice(documentTypes);
+//                document.setTopic(position, topic);
+//                document.setType(position, type);
+//                increment(topic, document.getToken(position), type);
             }
+        }
+
+        /**
+         * Sample a type and a topic for the current word. This method is computationally
+         * quite heavy and should and could probably be optimized further.
+         *
+         * @param word the word for which we sample a topic and a type;
+         * @param labels the set of labels to sample a topic from;
+         * @param types the set of types to sample a type from;
+         * @param docTypeCounts for each type, how often does it occur in the document under investigation?
+         * @return an array consisting of a word, a topic and a type;
+         */
+        public int[] sample (int word, ArrayList<Integer> labels, ArrayList<Integer> types, int[] docTypeCounts) {
+            double[][] topicTermScores = new double[labels.size()][types.size()];
+            double sum = 0.0;
+            for (int i = 0; i < types.size(); i++) {
+                int type = types.get(i);
+                double P_T = (gammaSum + typeCounts[type] + this.docTypeCounts[type]);
+                double P_Dt = (gamma[type] + docTypeCounts[type]);
+                for (int j = 0; j < labels.size(); j++) {
+                    int topic = labels.get(j);
+                    double score = P_Dt * // P(T|D)
+                            (beta + wordTopicCounts[word][topic] + docWordTopicCounts[word][topic]) /
+                            (betaSum + topicCounts[topic] + docTopicCounts[topic]) * // P(w|t)
+                            (alpha[topic] + typeTopicCounts[type][topic] + docTypeTopicCounts[type][topic]) / P_T;  // P(t|T)
+                    sum += score;
+                    topicTermScores[j][i] = score;
+                }
+            }
+            double sample = random.nextUniform() * sum;
+            int topic = -1; int type = 0;
+            while (sample > 0.0) {
+                topic++;
+                if (topic == labels.size()) {
+                    type++;
+                    topic = 0;
+                }
+                sample -= topicTermScores[topic][type];
+            }
+            if (topic == -1) {
+                throw new IllegalStateException("No topic sampled.");
+            }
+            return new int[]{word, labels.get(topic), types.get(type)};
+        }
+
+        /**
+         * Update the count matrices by decrementing the appropriate counts.
+         *
+         * @param topic the topic to update;
+         * @param word the word to update;
+         * @param type the type to update;
+         */
+        public void decrement (int topic, int word, int type) {
+            docTypeCounts[type]--;
+            docTypeTopicCounts[type][topic]--;
+            docTopicCounts[topic]--;
+            docWordTopicCounts[word][topic]--;
+        }
+
+        /**
+         * Update the count matrices by incrementing the appropriate counts.
+         *
+         * @param topic the topic to update.
+         * @param word the word to update.
+         * @param type the type to update.
+         */
+        public void increment (int topic, int word, int type) {
+            docTypeCounts[type]++;
+            docTypeTopicCounts[type][topic]++;
+            docTopicCounts[topic]++;
+            docWordTopicCounts[word][topic]++;
         }
 
         /**

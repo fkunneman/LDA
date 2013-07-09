@@ -3,28 +3,31 @@ package util;
 
 public class IDSorter implements Comparable {
 
-    private final Integer index;
-    private final Double value;
+    private final int index;
+    private final double value;
 
-    public IDSorter(Integer index, Double value) {
+    public IDSorter(int index, double value) {
         this.index = index;
         this.value = value;
     }
 
-    public final int compareTo(Object other_) {
-        IDSorter other = (IDSorter) other_;
-        if (value > other.value) {
+    public IDSorter(int index, int value) {
+        this.index = index;
+        this.value = value;
+    }
+
+    public final int compareTo(Object other) {
+        double otherP = ((IDSorter) other).value;
+        if (value > ((IDSorter) other).value) {
             return -1;
         }
-        if (other.value > value) {
+        if (value < ((IDSorter) other).value) {
             return 1;
         }
-        if (index > other.index) {
-            return -1;
-        }
-        if (other.index > index) {
-            return 1;
-        }
+        int otherID = ((IDSorter) other).index;
+        if (index > otherID) { return -1; }
+        else if (index < otherID) { return 1; }
+
         return 0;
     }
 

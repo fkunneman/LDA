@@ -187,8 +187,11 @@ public class LDA implements Serializable {
          */
         public void sampleForOneDocument (Document document) {
             int[] docTopicCounts = new int[numTopics];
-            for (Integer topic : document.getTopicAssignments()) {
-                docTopicCounts[topic]++;
+            for (int position = 0; position < document.size(); position++) {
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
+                docTopicCounts[document.getTopic(position)]++;
             }
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);

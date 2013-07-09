@@ -63,6 +63,8 @@ public class LLDA implements Serializable {
         wordIndex = corpus.getWordIndex();
 
         random = new Randoms(20);
+
+        //logger.setUseParentHandlers(false);
     }
 
     /**
@@ -94,16 +96,16 @@ public class LLDA implements Serializable {
      * @param iterations how many iterations to run the sampler;
      * @param corpus the corpus to run the sampler on;
      */
-    public void infer (int iterations, Corpus corpus) {
-        inferSampler = new LLDA.InferSampler();
+    public void infer (int iterations, Corpus corpus, double alpha) {
+        //logger.setUseParentHandlers(false);
+        this.alpha = alpha / numTopics;
         for (Document document : corpus) {
+            inferSampler = new LLDA.InferSampler();
             inferSampler.addDocument(document);
-        }
-        logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
-        for (int iteration = 1; iteration <= iterations; iteration++) {
-            logger.info("Sampling iteration " + iteration + " started.");
-            for (Document document : corpus) {
-                inferSampler.sampleForOneDocument(document);
+            //logger.info("Sampler initialized. " + numTopics + " topics and " + corpus.size() + " documents.");
+            for (int iteration = 1; iteration <= iterations; iteration++) {
+                //logger.info("Sampling iteration " + iteration + " started.");
+               inferSampler.sampleForOneDocument(document);
             }
         }
     }
@@ -126,17 +128,21 @@ public class LLDA implements Serializable {
             int docLen = 0;
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);
-                if (word >= numWords) { continue; }
+                if (word >= numWords) {
+                    continue;
+                }
                 docLen++;
                 topicCounts[document.getTopic(position)]++;
             }
             for (int topic = 0; topic < numTopics; topic++) {
-                sortedTopics[topic] = new IDSorter(topic, (smooth + topicCounts[topic]) / (docLen));
+                sortedTopics[topic] = new IDSorter(topic, (alpha + topicCounts[topic]) / (docLen + numTopics * alpha));
             }
             Arrays.sort(sortedTopics);
             for (int index = 0; index < numTopics; index++) {
                 double score = sortedTopics[index].getValue();
-                if (score == 0.0) { break; }
+                if (score == 0.0) {
+                    break;
+                }
                 printer.print(corpus.getLabelIndex().getItem(sortedTopics[index].getIndex()) + " " + score + " ");
             }
             printer.print("\n");
@@ -157,8 +163,11 @@ public class LLDA implements Serializable {
          */
         public void sampleForOneDocument (Document document, ArrayList<Integer> labels) {
             int[] docTopicCounts = new int[numTopics];
-            for (Integer topic : document.getTopicAssignments()) {
-                docTopicCounts[topic]++;
+            for (int position = 0; position < document.size(); position++) {
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
+                docTopicCounts[document.getTopic(position)]++;
             }
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);
@@ -168,9 +177,12 @@ public class LLDA implements Serializable {
                 int topic = document.getTopic(position);
                 decrement(topic, word);
                 docTopicCounts[topic]--;
+                // sample a new topic
                 topic = sample(word, labels, docTopicCounts);
+                // update the counts
                 increment(topic, word);
                 docTopicCounts[topic]++;
+                // assign the topic
                 document.setTopic(position, topic);
             }
         }
@@ -194,6 +206,9 @@ public class LLDA implements Serializable {
          */
         public void addDocument (Document document, ArrayList<Integer> labels) {
             for (int position = 0; position < document.size(); position++) {
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
                 int topic = random.choice(labels);
                 document.setTopic(position, topic);
                 increment(topic, document.getToken(position));
@@ -217,8 +232,7 @@ public class LLDA implements Serializable {
             double sum = 0.0;
             for (int i = 0; i < labels.size(); i++) {
                 int topic = labels.get(i);
-                double score = (alpha + docTopicCounts[topic]) *
-                               (beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]);
+                double score = score(word, topic, docTopicCounts);
                 sum += score;
                 topicTermScores[i] = score;
             }
@@ -228,7 +242,22 @@ public class LLDA implements Serializable {
                 topic++;
                 sample -= topicTermScores[topic];
             }
+            if (topic == -1) {
+                throw new IllegalStateException("No topic sampled.");
+            }
             return labels.get(topic);
+        }
+
+        /**
+         * Return the score for (w|t) * (t|d)
+         *
+         * @param word the word for which we sample a topic
+         * @param topic the topic to compute the score
+         * @param docTopicCounts how often does this topic occur in the document
+         * @return score
+         */
+        public double score (int word, int topic, int[] docTopicCounts) {
+            return 0.0;
         }
     }
 
@@ -268,6 +297,19 @@ public class LLDA implements Serializable {
             topicCounts[topic]--;
             wordTopicCounts[word][topic]--;
         }
+
+        /**
+         * Learn scorer
+         *
+         * @param word the word for which we sample a topic
+         * @param topic the topic to compute the score
+         * @param docTopicCounts how often does this topic occur in the document
+         * @return score
+         */
+        public double score (int word, int topic, int[] docTopicCounts) {
+            return (alpha + docTopicCounts[topic]) *
+                    ((beta + wordTopicCounts[word][topic]) / (betaSum + topicCounts[topic]));
+        }
     }
 
     /**
@@ -275,12 +317,32 @@ public class LLDA implements Serializable {
      */
     public class InferSampler extends LLDA.Sampler {
 
+        private int[][] docWordTopicCounts;
+        private int[] bestTopicForWord;
+
         private ArrayList<Integer> documentTopics;
 
         public InferSampler () {
             documentTopics = new ArrayList<Integer>();
             for (int topic = 0; topic < numTopics; topic++) {
                 documentTopics.add(topic);
+            }
+            docWordTopicCounts = new int[numWords][numTopics];
+
+            bestTopicForWord = new int[numWords];
+            for (int word = 0; word < numWords; word++) {
+                int bestTopic = -1;
+                int count = 0;
+                for (int topic = 0; topic < numTopics; topic++) {
+                    if (wordTopicCounts[word][topic] > count) {
+                        count = wordTopicCounts[word][topic];
+                        bestTopic = topic;
+                    }
+                }
+                if (bestTopic == -1) {
+                    throw new IllegalStateException("No topic sampled.");
+                }
+                bestTopicForWord[word] = bestTopic;
             }
         }
 
@@ -291,7 +353,35 @@ public class LLDA implements Serializable {
          * @param document an instance of Document for which to do the random assignments;
          */
         public void addDocument (Document document) {
-            addDocument(document, documentTopics);
+            for (int position = 0; position < document.size(); position++) {
+                int word = document.getToken(position);
+                // We ignore all OOV types
+                if (word < numWords) {
+                    int topic = bestTopicForWord[word];
+                    increment(topic, word);
+                    document.setTopic(position, topic);
+                }
+            }
+        }
+
+        /**
+         * Update the count matrices by incrementing the appropriate counts.
+         *
+         * @param topic the topic to update;
+         * @param word the word to update;
+         */
+        public void increment (int topic, int word) {
+            docWordTopicCounts[word][topic]++;
+        }
+
+        /**
+         * Update the count matrices by decrementing the appropriate counts.
+         *
+         * @param topic the topic to update;
+         * @param word the word to update;
+         */
+        public void decrement (int topic, int word) {
+            docWordTopicCounts[word][topic]--;
         }
 
         /**
@@ -301,6 +391,21 @@ public class LLDA implements Serializable {
          */
         public void sampleForOneDocument (Document document) {
             sampleForOneDocument(document, documentTopics);
+        }
+
+
+        /**
+         * Inference scorer
+         *
+         * @param word the word for which we sample a topic
+         * @param topic the topic to compute the score
+         * @param docTopicCounts how often does this topic occur in the document
+         * @return score
+         */
+        public double score (int word, int topic, int[] docTopicCounts) {
+            return (alpha + docTopicCounts[topic]) *
+                    ((beta + docWordTopicCounts[word][topic] + wordTopicCounts[word][topic]) /
+                     (betaSum + docTopicCounts[topic] + topicCounts[topic]));
         }
     }
 

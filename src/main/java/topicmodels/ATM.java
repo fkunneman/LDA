@@ -282,8 +282,11 @@ public class ATM {
         public void sampleForOneDocument (Document document, ArrayList<Integer> types) {
             int[] assignment;
             int[] docTypeCounts = new int[numTypes];
-            for (Integer type : document.getTypeAssignments()) {
-                docTypeCounts[type]++;
+            for (int position = 0; position < document.size(); position++) {
+                if (document.getToken(position) >= numWords) {
+                    continue;
+                }
+                docTypeCounts[document.getType(position)]++;
             }
             for (int position = 0; position < document.size(); position++) {
                 int word = document.getToken(position);

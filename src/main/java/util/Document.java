@@ -1,6 +1,7 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A Document is a data structure that stores the tokens of a text, next

@@ -74,11 +74,18 @@ public class Main {
                 .setDefault(0.01)
                 .help("Gamma parameter: smoothing over the topic distribution.");
 
+        parser.addArgument("--seed")
+                .dest("seed")
+                .type(Long.class)
+                .setDefault(20L)
+                .help("Random seed number");
+
         Namespace ns = parser.parseArgs(args);
         Integer numTopics = ns.getInt("numTopics");
         double alpha = (double) ns.getDouble("alpha");
         double beta = (double) ns.getDouble("beta");
         double gamma = (double) ns.getDouble("gamma");
+        long seed = (long) ns.getLong("seed");
         Integer iterations = ns.getInt("iterations");
         String file = ns.getString("file");
         String model = ns.getString("model");
@@ -102,14 +109,13 @@ public class Main {
             if (system.equals("LLDA")) {
                 LLDA llda = new LLDA(alpha, beta, corpus);
                 llda.train(iterations, corpus);
-                llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
+                //llda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 llda.write(new File(outputDirectory + File.separator + "model.lda"));
             } else if (system.equals("DDLLDA")) {
-                DDLLDA ddllda = new DDLLDA(alpha, beta, gamma, corpus);
+                DDLLDA ddllda = new DDLLDA(alpha, beta, gamma, corpus, seed);
                 ddllda.train(iterations, corpus);
                 ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "final-topics.txt"), corpus, 0.0);
                 ddllda.write(new File(outputDirectory + File.separator + "model.lda"));
-                ddllda.printTopicDistribution(new File(outputDirectory + File.separator + "topic-distribution.txt"));
             } else if (system.equals("ProtoLDA")) {
                 HashMap<String, ArrayList<String>> protoTopics = ProtoTopics.read(protoTopicFile);
                 ProtoLDA lda = new ProtoLDA(numTopics, alpha, beta, gamma, corpus, protoTopics);
@@ -135,14 +141,14 @@ public class Main {
                 LLDA llda = LLDA.read(new File(model));
                 Corpus corpus = new Corpus(llda.wordIndex, llda.topicIndex);
                 corpus.readFile(file);
-                llda.infer(iterations, corpus);
+                llda.infer(iterations, corpus, alpha);
                 llda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, alpha);
 
             } else if (system.equals("DDLLDA")) {
                 DDLLDA ddllda = DDLLDA.read(new File(model));
                 Corpus corpus = new Corpus(ddllda.wordIndex, ddllda.topicIndex, ddllda.typeIndex);
                 corpus.readFile(file);
-                ddllda.infer(iterations, corpus);
+                ddllda.infer(iterations, corpus, alpha, gamma);
                 ddllda.writeTopicDistributions(new File(outputDirectory + File.separator + "inference-topics.txt"), corpus, gamma);
             } else {
                 LDA lda = LDA.read(new File(model));
